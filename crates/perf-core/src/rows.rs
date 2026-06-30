@@ -77,12 +77,13 @@ pub struct EventRow {
     /// The event name (e.g. `cycles`, `instructions`), if recorded.
     pub name: Option<String>,
     /// The event kind: `hardware`, `software`, `tracepoint`, `hw_cache`,
-    /// `breakpoint`, `dynamic_pmu`, or `raw`.
+    /// `breakpoint`, or `dynamic_pmu`.
     pub r#type: String,
     /// The event config value, when it is a plain integer in the source
-    /// (tracepoint id / dynamic-PMU config). `None` for kinds whose config is a
-    /// structured enum (hardware/software/hw_cache) — the `name`/`type` identify
-    /// those — so the column degrades gracefully rather than guessing.
+    /// (tracepoint id / dynamic-PMU config). `None` for the kinds whose config is
+    /// a structured enum (hardware/software/hw_cache/breakpoint) — the
+    /// `name`/`type` identify those — so the column degrades gracefully rather
+    /// than guessing.
     pub config: Option<u64>,
     /// Fixed sampling period, if the event uses period-based sampling.
     pub sample_period: Option<u64>,

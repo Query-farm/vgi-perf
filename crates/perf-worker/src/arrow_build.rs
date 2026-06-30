@@ -81,7 +81,7 @@ impl Table {
                 commented("event_id", DataType::UInt64, true, "The primary event id, or the attribute index when the capture records no ids."),
                 commented("name", DataType::Utf8, true, "The event name, e.g. 'cycles', 'instructions', if recorded."),
                 commented("type", DataType::Utf8, true, "Event kind: 'hardware', 'software', 'tracepoint', 'hw_cache', 'breakpoint', or 'dynamic_pmu'."),
-                commented("config", DataType::UInt64, true, "The integer config value for tracepoint / dynamic-PMU events; NULL for structured-enum kinds (hardware/software/hw_cache)."),
+                commented("config", DataType::UInt64, true, "The integer config value, surfaced only for tracepoint and dynamic_pmu events; NULL for hardware, software, hw_cache, and breakpoint events (whose kind/name already identify them)."),
                 commented("sample_period", DataType::UInt64, true, "Fixed sampling period, if the event uses period-based sampling; else NULL."),
                 commented("sample_freq", DataType::UInt64, true, "Target sampling frequency (samples/sec), if frequency-based sampling; else NULL."),
             ],

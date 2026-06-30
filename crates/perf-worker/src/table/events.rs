@@ -13,8 +13,9 @@ pub fn def() -> PerfTableFn {
          perf.data bytes. Columns: `event_id` (the primary event id, or the attribute index when \
          no ids are recorded), `name` (e.g. 'cycles', 'instructions'), `type` (the event kind: \
          'hardware', 'software', 'tracepoint', 'hw_cache', 'breakpoint', or 'dynamic_pmu'), \
-         `config` (the integer config for tracepoint / dynamic-PMU events; NULL for structured \
-         kinds whose `name`/`type` already identify them), `sample_period` (fixed period, if \
+         `config` (the integer config, surfaced only for tracepoint / dynamic-PMU events; NULL for \
+         hardware/software/hw_cache/breakpoint, whose `name`/`type` already identify them), \
+         `sample_period` (fixed period, if \
          period-sampled), and `sample_freq` (target samples/sec, if frequency-sampled). Use it to \
          see what a capture measured and to label samples by event.",
         "Decode perf.data event attributes into rows: `event_id`, `name`, `type` \
@@ -31,7 +32,7 @@ pub fn def() -> PerfTableFn {
          | `event_id` | UBIGINT | Primary event id, or the attribute index. |\n\
          | `name` | VARCHAR | Event name, e.g. `cycles`. |\n\
          | `type` | VARCHAR | `hardware`/`software`/`tracepoint`/`hw_cache`/`breakpoint`/`dynamic_pmu`. |\n\
-         | `config` | UBIGINT | Tracepoint/dynamic-PMU config; NULL for structured kinds. |\n\
+         | `config` | UBIGINT | Tracepoint/dynamic-PMU integer config; NULL for hardware/software/hw_cache/breakpoint. |\n\
          | `sample_period` | UBIGINT | Fixed sampling period; NULL if frequency-sampled. |\n\
          | `sample_freq` | UBIGINT | Target samples/sec; NULL if period-sampled. |"
             .into(),
