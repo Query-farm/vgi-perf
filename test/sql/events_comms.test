@@ -1,0 +1,50 @@
+# name: test/sql/events_comms.test
+# group: [vgi_perf]
+#
+# perf.events(src) and perf.comms(src).
+
+require-env VGI_PERF_WORKER
+
+require-env VGI_PERF_DATA
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'perf' AS perf (TYPE vgi, LOCATION '${VGI_PERF_WORKER}');
+
+statement ok
+SET search_path = 'perf.main';
+
+# Synthetic: one cycles hardware event, period-sampled at 4000 (no frequency).
+query TII
+SELECT type, sample_period, sample_freq
+FROM perf.main.events('${VGI_PERF_DATA}/callchain.data');
+----
+hardware	4000	NULL
+
+# Real capture: one cycles event, frequency-sampled.
+query TI
+SELECT type, name LIKE 'cycles%'
+FROM perf.main.events('${VGI_PERF_DATA}/sleep.data');
+----
+hardware	true
+
+# Synthetic COMM record: pid 1234 is 'loop'.
+query IT
+SELECT pid, comm
+FROM perf.main.comms('${VGI_PERF_DATA}/callchain.data');
+----
+1234	loop
+
+# Real capture has COMM records too.
+query I
+SELECT count(*) > 0 FROM perf.main.comms('${VGI_PERF_DATA}/sleep.data');
+----
+true
+
+statement ok
+USE memory;
+
+statement ok
+DETACH perf;

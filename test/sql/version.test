@@ -1,0 +1,27 @@
+# name: test/sql/version.test
+# group: [vgi_perf]
+#
+# perf_version() scalar + a basic attach/search_path smoke.
+
+require-env VGI_PERF_WORKER
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'perf' AS perf (TYPE vgi, LOCATION '${VGI_PERF_WORKER}');
+
+statement ok
+SET search_path = 'perf.main';
+
+# The worker advertises a non-empty semantic version string.
+query I
+SELECT perf.main.perf_version() ~ '^[0-9]+\.[0-9]+\.[0-9]+';
+----
+true
+
+statement ok
+USE memory;
+
+statement ok
+DETACH perf;

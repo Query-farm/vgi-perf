@@ -1,0 +1,59 @@
+# name: test/sql/samples.test
+# group: [vgi_perf]
+#
+# perf.samples(src): profiling samples with raw call chains. Asserted against the
+# deterministic synthetic capture (3 cycles samples with known ip / cpu / period
+# and call chains).
+
+require-env VGI_PERF_WORKER
+
+require-env VGI_PERF_DATA
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'perf' AS perf (TYPE vgi, LOCATION '${VGI_PERF_WORKER}');
+
+statement ok
+SET search_path = 'perf.main';
+
+# Three samples.
+query I
+SELECT count(*) FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data');
+----
+3
+
+# In capture (time) order: ip, cpu, period, and call-chain depth.
+query IIII
+SELECT ip, cpu, period, len(callchain)
+FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data')
+ORDER BY time;
+----
+4194560	2	4000	2
+139637976727808	2	4000	2
+4194560	3	4000	1
+
+# The first sample's call chain is [0x400100, 0x400050] = [4194560, 4194384],
+# innermost frame first.
+query I
+SELECT unnest(callchain) AS frame
+FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data')
+ORDER BY time, frame DESC
+LIMIT 2;
+----
+4194560
+4194384
+
+# The real capture decodes samples too (no call chains were recorded → NULL).
+query II
+SELECT count(*), count(callchain)
+FROM perf.main.samples('${VGI_PERF_DATA}/sleep.data');
+----
+7	0
+
+statement ok
+USE memory;
+
+statement ok
+DETACH perf;

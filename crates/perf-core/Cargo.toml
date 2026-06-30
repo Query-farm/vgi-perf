@@ -1,0 +1,16 @@
+[package]
+name = "perf-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Pure-Rust structural decoder for the Linux perf.data binary format into samples / mmaps / comms / events / metadata row structs"
+
+[dependencies]
+linux-perf-data.workspace = true
+linux-perf-event-reader.workspace = true
+
+[dev-dependencies]
+proptest = "1"

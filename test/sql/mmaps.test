@@ -1,0 +1,50 @@
+# name: test/sql/mmaps.test
+# group: [vgi_perf]
+#
+# perf.mmaps(src): memory mappings with build-ids. The synthetic capture carries
+# two MMAP2 records with known inline build-ids; the real capture resolves
+# build-ids from the HEADER_BUILD_ID feature section.
+
+require-env VGI_PERF_WORKER
+
+require-env VGI_PERF_DATA
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'perf' AS perf (TYPE vgi, LOCATION '${VGI_PERF_WORKER}');
+
+statement ok
+SET search_path = 'perf.main';
+
+# Synthetic: two mappings, each with a known inline build-id (lowercase hex).
+query ITIT
+SELECT addr, filename, len, build_id
+FROM perf.main.mmaps('${VGI_PERF_DATA}/callchain.data')
+ORDER BY addr;
+----
+4194304	/usr/bin/loop	4096	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+139637976727552	/usr/lib/libc.so.6	2097152	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+
+# Real capture: at least two mappings resolve a build-id from HEADER_BUILD_ID.
+query I
+SELECT count(*) >= 2
+FROM perf.main.mmaps('${VGI_PERF_DATA}/sleep.data')
+WHERE build_id IS NOT NULL;
+----
+true
+
+# Build-ids are lowercase hex.
+query I
+SELECT bool_and(build_id ~ '^[0-9a-f]+$')
+FROM perf.main.mmaps('${VGI_PERF_DATA}/sleep.data')
+WHERE build_id IS NOT NULL;
+----
+true
+
+statement ok
+USE memory;
+
+statement ok
+DETACH perf;

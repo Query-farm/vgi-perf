@@ -1,0 +1,26 @@
+# vgi-lint-check configuration for the vgi-perf worker.
+#
+# Every function this worker exposes scans an external `perf.data` capture: the
+# five table functions take a `src` that is a path to a perf.data file (or a BLOB
+# of its bytes). The catalog `source_url` (→ the GitHub repo), the classifying
+# schema tags (domain / category / topic), titles, doc_llm / doc_md, keywords,
+# per-argument docs, per-column comments, result-column tables, and the schema
+# example_queries are all emitted from the worker's catalog + FunctionMetadata
+# (crates/perf-worker/src/**), which the linter reads over VGI. All of those
+# STATIC metadata rules gate at `info`.
+#
+# The example-EXECUTION rules (VGI901/902/906/907) are disabled: the documented
+# example queries scan a perf.data file that is not present in the lint sandbox
+# (the sandbox attaches only the worker), so those rows would not materialize
+# there. The same queries — including the headline ip↔mmap range join and the
+# scan-state batch-boundary resume — are executed for real against the committed
+# fixtures by the haybarn SQLLogic E2E (test/sql/*.test, `make test-sql`). Every
+# static metadata rule still gates at --fail-on info.
+[tool.vgi-lint-check]
+location = "target/release/perf-worker"
+select = ["ALL"]
+ignore = ["VGI901", "VGI902", "VGI906", "VGI907"]
+fail_on = "info"
+
+[tool.vgi-lint-check.options]
+column_comment_min_ratio = 0.8

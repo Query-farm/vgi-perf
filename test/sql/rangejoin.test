@@ -1,0 +1,60 @@
+# name: test/sql/rangejoin.test
+# group: [vgi_perf]
+#
+# The marquee query: attribute each raw sample `ip` to the DSO it fell in, via an
+# ip ↔ mmap address-range join. This is the relational join that collapsed-stack
+# text files can't do — and the join whose build_id output feeds vgi-symbols.
+
+require-env VGI_PERF_WORKER
+
+require-env VGI_PERF_DATA
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'perf' AS perf (TYPE vgi, LOCATION '${VGI_PERF_WORKER}');
+
+statement ok
+SET search_path = 'perf.main';
+
+# Synthetic: two samples land in /usr/bin/loop (ip 0x400100), one in libc
+# (ip 0x7f0000000100). Range-join on pid + ip BETWEEN addr AND addr+len.
+query TI
+SELECT m.filename, count(*) AS hits
+FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
+JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
+  ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len
+GROUP BY m.filename
+ORDER BY hits DESC, m.filename;
+----
+/usr/bin/loop	2
+/usr/lib/libc.so.6	1
+
+# The hot mapping also exposes its build_id — the exact (build_id, ip) pair a
+# downstream vgi-symbols lookup consumes.
+query TT
+SELECT m.filename, m.build_id
+FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
+JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
+  ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len
+GROUP BY m.filename, m.build_id
+ORDER BY count(*) DESC, m.filename
+LIMIT 1;
+----
+/usr/bin/loop	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+# Every synthetic sample ip is attributable to exactly one mapping.
+query I
+SELECT count(*)
+FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
+JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
+  ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len;
+----
+3
+
+statement ok
+USE memory;
+
+statement ok
+DETACH perf;

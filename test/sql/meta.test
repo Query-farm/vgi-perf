@@ -1,0 +1,51 @@
+# name: test/sql/meta.test
+# group: [vgi_perf]
+#
+# perf.meta(src): one row of capture-wide metadata from the HEADER_* feature
+# sections. Asserts populated metadata for the real sleep.data capture, and
+# graceful NULL degradation for the synthetic capture (which has an empty
+# feature bitmap).
+
+require-env VGI_PERF_WORKER
+
+require-env VGI_PERF_DATA
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'perf' AS perf (TYPE vgi, LOCATION '${VGI_PERF_WORKER}');
+
+statement ok
+SET search_path = 'perf.main';
+
+# Real capture: hostname / arch / nrcpus / first cmdline arg are populated.
+query TTII
+SELECT hostname, arch, nrcpus, total_events
+FROM perf.main.meta('${VGI_PERF_DATA}/sleep.data');
+----
+arthur-des	x86_64	16	14
+
+query T
+SELECT cmdline[1] FROM perf.main.meta('${VGI_PERF_DATA}/sleep.data');
+----
+/usr/bin/perf
+
+query I
+SELECT len(cmdline) > 3 FROM perf.main.meta('${VGI_PERF_DATA}/sleep.data');
+----
+true
+
+# Synthetic capture: empty feature bitmap → every HEADER_* column NULL, but
+# total_events is still counted (1 comm + 2 mmap2 + 3 sample = 6).
+query TTII
+SELECT hostname, arch, nrcpus, total_events
+FROM perf.main.meta('${VGI_PERF_DATA}/callchain.data');
+----
+NULL	NULL	NULL	6
+
+statement ok
+USE memory;
+
+statement ok
+DETACH perf;
