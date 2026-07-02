@@ -20,12 +20,13 @@ pub fn def() -> PerfTableFn {
          build flame data, or diff captures for CI performance-regression gates.",
         "Decode perf.data profiling samples into rows: `time`, `pid`, `tid`, `cpu`, `ip` \
          (raw UBIGINT), `period`, `event`, and `callchain` (LIST(UBIGINT) of raw IPs). `src` is a \
-         path or a BLOB. IPs are unsymbolicated — join to `mmaps` + vgi-symbols to resolve. \
-         Example: `SELECT ip, count(*) FROM perf.main.samples('/data/perf.data') GROUP BY ip`.",
+         path or a BLOB. IPs are unsymbolicated — join to `mmaps` + vgi-symbols to resolve. Rank \
+         raw IPs by frequency to find the hottest addresses in a capture.",
         "perf, perf.data, perf record, samples, profiling, profiler, instruction pointer, ip, \
          callchain, call stack, stack, cycles, hotspot, flamegraph, CPU profile, performance, \
          linux perf",
         "table/samples.rs",
+        crate::meta::CAT_SAMPLES,
     );
     tags.push((
         "vgi.result_columns_md".into(),

@@ -22,6 +22,7 @@ pub fn def() -> PerfTableFn {
         "perf, perf.data, metadata, header, hostname, arch, architecture, nrcpus, perf version, \
          cmdline, command line, total events, capture info",
         "table/meta.rs",
+        crate::meta::CAT_CONTEXT,
     );
     tags.push((
         "vgi.result_columns_md".into(),

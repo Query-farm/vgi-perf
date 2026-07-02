@@ -25,6 +25,7 @@ pub fn def() -> PerfTableFn {
         "perf, perf.data, mmap, mmap2, memory mapping, dso, shared object, build id, build_id, \
          symbolication, symbols, address range, module, library, vdso",
         "table/mmaps.rs",
+        crate::meta::CAT_MAPPINGS,
     );
     tags.push((
         "vgi.result_columns_md".into(),

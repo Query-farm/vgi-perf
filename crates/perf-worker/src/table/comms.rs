@@ -19,6 +19,7 @@ pub fn def() -> PerfTableFn {
         "perf, perf.data, comm, process name, thread name, command, pid, tid, exec, process \
          resolution",
         "table/comms.rs",
+        crate::meta::CAT_CONTEXT,
     );
     tags.push((
         "vgi.result_columns_md".into(),

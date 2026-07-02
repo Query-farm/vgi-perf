@@ -54,9 +54,9 @@ impl TableFunction for PerfTableFn {
             "src",
             0,
             "any",
-            "The perf.data source: a VARCHAR path to a perf.data file on disk, or a BLOB \
-             containing the raw perf.data bytes (e.g. a file already loaded into a column). \
-             The file is decoded as a sequential binary event stream.",
+            "The perf.data capture to decode: either a filesystem path to a perf.data file, or \
+             the raw perf.data bytes themselves (e.g. a capture already loaded into a column). \
+             It is read as a sequential binary event stream.",
         )]
     }
 

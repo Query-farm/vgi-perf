@@ -35,6 +35,66 @@ pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
+/// Hex of the committed synthetic `data/callchain.data` fixture (a tiny, valid
+/// `cycles` perf.data capture: 3 samples with call chains, 2 mmap2 records with
+/// inline build-ids, 1 COMM, 1 event attr, empty feature bitmap). Embedded so the
+/// `vgi.agent_test_tasks` suite (VGI152/VGI920) is self-contained — the analyst
+/// decodes it via `from_hex(...)` as a BLOB `src`, no external file needed.
+const FIXTURE_HEX: &str = "50455246494c45326800000000000000400000000000000068000000000000004000000000000000a800000000000000a00100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000a00f000000000000a70100000000000000000000000000000000000000000000000000000000000000000000000000000300000002001800d2040000d20400006c6f6f70000000000a00000002405800d2040000d204000000004000000000000010000000000000000000000000000014000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000002f7573722f62696e2f6c6f6f700000000a00000002406000d2040000d204000000000000007f00000000200000000000000000000000000014000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00000000000000002f7573722f6c69622f6c6962632e736f2e3600000000000009000000020048000001400000000000d2040000d2040000e8030000000000000200000000000000a00f000000000000020000000000000000014000000000005000400000000000090000000200480000010000007f0000d2040000d2040000d0070000000000000200000000000000a00f000000000000020000000000000000010000007f0000000140000000000009000000020040000001400000000000d2040000d2040000b80b0000000000000300000000000000a00f00000000000001000000000000000001400000000000";
+
+/// The `vgi.agent_test_tasks` suite (VGI152/VGI920), self-contained via the
+/// embedded [`FIXTURE_HEX`] BLOB so `vgi-lint simulate` can execute every task's
+/// `reference_sql` against the attached worker without an external `perf.data`
+/// file. Each prompt hands the analyst the same `from_hex(...)` capture and asks
+/// for a single, unambiguous result with named columns; the reference results are
+/// pinned by the committed synthetic fixture (see `data/callchain.data`).
+fn agent_tasks_json() -> String {
+    let blob = format!("from_hex('{FIXTURE_HEX}')");
+    let p_samples = format!(
+        "A Linux perf.data capture is available as the BLOB {blob}. How many profiling samples \
+         does it contain? Return a single row with one column named n."
+    );
+    let p_events = format!(
+        "A Linux perf.data capture is available as the BLOB {blob}. Which event kind was sampled \
+         and at what fixed sampling period? Return a single row with columns type and \
+         sample_period."
+    );
+    let p_meta = format!(
+        "A Linux perf.data capture is available as the BLOB {blob}. Its capture-wide metadata \
+         reports a single grand total of every event record in the data section (samples, mmap, \
+         and comm records combined) — this is NOT the number of sampled event *types*. Read that \
+         metadata total. Return a single row with one column named total_events."
+    );
+    let p_mmaps = format!(
+        "A Linux perf.data capture is available as the BLOB {blob}. List every memory-mapped file \
+         and its build-id, ordered by filename ascending. Return columns filename and build_id."
+    );
+    let p_comms = format!(
+        "A Linux perf.data capture is available as the BLOB {blob}. What command (process) name \
+         was recorded for the process in this capture? Return a single row with one column named \
+         comm."
+    );
+    let r_samples = format!("SELECT count(*) AS n FROM perf.main.samples({blob})");
+    let r_events = format!("SELECT type, sample_period FROM perf.main.events({blob})");
+    let r_meta = format!("SELECT total_events FROM perf.main.meta({blob})");
+    let r_mmaps =
+        format!("SELECT filename, build_id FROM perf.main.mmaps({blob}) ORDER BY filename");
+    let r_comms = format!("SELECT comm FROM perf.main.comms({blob})");
+    crate::meta::agent_test_tasks_json(&[
+        (
+            "worker_version",
+            "What version of the perf worker is running? Return a single row with one column \
+             named version.",
+            "SELECT perf.main.perf_version() AS version",
+        ),
+        ("sample_count", &p_samples, &r_samples),
+        ("event_policy", &p_events, &r_events),
+        ("event_record_total", &p_meta, &r_meta),
+        ("mapped_files_build_ids", &p_mmaps, &r_mmaps),
+        ("process_name", &p_comms, &r_comms),
+    ])
+}
+
 /// Catalog + schema metadata (description, provenance, discovery tags) surfaced
 /// to DuckDB and the `vgi-lint` metadata-quality linter. The table functions
 /// themselves are registered via [`table::register`]; this adds catalog/schema
@@ -63,16 +123,18 @@ fn catalog_metadata(name: &str) -> CatalogModel {
             ),
             (
                 "vgi.doc_llm".to_string(),
-                "Decode Linux perf.data profiling captures into relational tables. Exposes \
-                 table functions samples(src), mmaps(src), comms(src), events(src), and meta(src) \
-                 — where src is a VARCHAR path to a perf.data file or a BLOB of perf.data bytes. \
-                 samples gives time/pid/tid/cpu/ip/period/event plus a callchain LIST(UBIGINT) of \
-                 raw instruction pointers; mmaps gives the memory mappings (addr/len/filename/ \
-                 build_id) that make a raw ip interpretable; comms maps pid→process name; events \
-                 lists the sampled event attributes; meta is one row of capture-wide metadata. \
-                 Instruction pointers are RAW — join ip to mmaps by address range and feed \
-                 build_id to vgi-symbols for symbolication. Use for CI performance-regression \
-                 gates and bulk relational analysis of a fleet of perf.data files."
+                "Decode Linux perf.data profiling captures into relational tables you can query in \
+                 DuckDB. A perf.data file is a binary stream of profiling records; this worker \
+                 shreds it into ordinary rows so you can rank hot instruction pointers, diff \
+                 captures, and gate CI on performance regressions across a whole fleet of captures \
+                 without leaving SQL. Instruction pointers and call-chain frames come out RAW \
+                 (unsymbolicated) by design: range-join an address to the memory mapping it fell \
+                 in to find the backing shared object, then feed that mapping's build-id to \
+                 vgi-symbols for native symbolication. Each decode function takes one source \
+                 argument — a path to a perf.data file, or the raw capture bytes already loaded \
+                 into a column. List the schema to discover the individual functions. Reach for \
+                 it for bulk, relational analysis of Linux perf profiles rather than single-file \
+                 interactive inspection."
                     .to_string(),
             ),
             (
@@ -95,13 +157,14 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  \x20 ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len\n\
                  GROUP BY 1 ORDER BY 2 DESC;\n\
                  ```\n\n\
-                 **Function surface.** Five table functions, each taking a `src` that is a VARCHAR \
-                 path to a `perf.data` file or a BLOB of its bytes: `samples(src)` \
-                 (time, pid, tid, cpu, `ip`, period, event, and `callchain` — a LIST(UBIGINT) of \
-                 raw IP frames), `mmaps(src)` (pid, tid, addr, len, pgoff, filename, `build_id`), \
-                 `comms(src)` (pid, tid, comm, time), `events(src)` (event_id, name, type, config, \
-                 sample_period, sample_freq), and `meta(src)` (one row: hostname, arch, nrcpus, \
-                 perf_version, cmdline, total_events). Plus a `perf_version()` scalar.\n\n\
+                 **What you get.** Each decode function takes one source argument — a path to a \
+                 `perf.data` file, or the raw capture bytes already loaded into a column — and \
+                 streams the decoded records out as ordinary typed rows. The profiling samples \
+                 (with their raw call chains), the process address-space mappings, the recorded \
+                 event attributes, the process/thread names, and the capture-wide host metadata \
+                 are each a separate function; list the schema to discover them. Ranges, IDs, and \
+                 timestamps come through as real integer columns so they join and aggregate \
+                 directly in SQL.\n\n\
                  **Raw IPs, by design.** Instruction pointers and call-chain frames are emitted \
                  **unsymbolicated**. The `mmaps` records — with their `build_id`s — are what make \
                  a raw `ip` interpretable: range-join `samples.ip BETWEEN m.addr AND m.addr + \
@@ -109,8 +172,8 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  for native symbolication, mirroring the pprof / minidump → symbols loop. \
                  Collapsed-stack text files throw the mmap + build-id information away; the binary \
                  `perf.data` path keeps it.\n\n\
-                 **Scope.** v1 decodes the **binary** `perf.data` structure only (samples / mmaps \
-                 / comms / events / meta). The folded/collapsed-stack text path is intentionally \
+                 **Scope.** v1 decodes the **binary** `perf.data` record structure only. The \
+                 folded/collapsed-stack text path is intentionally \
                  out of scope (DuckDB's `read_csv` already covers it), as is symbolication \
                  (→ vgi-symbols) and `perf.data` *writing*. `perf.data` varies by kernel and perf \
                  build; any `HEADER_*` feature section a capture omits comes back as NULL columns \
@@ -120,6 +183,10 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  GitHub](https://github.com/Query-farm/vgi-perf) for the full column reference and \
                  examples."
                     .to_string(),
+            ),
+            (
+                "vgi.agent_test_tasks".to_string(),
+                agent_tasks_json(),
             ),
             ("vgi.author".to_string(), "Query.Farm".to_string()),
             (
@@ -145,6 +212,10 @@ fn catalog_metadata(name: &str) -> CatalogModel {
             tags: vec![
                 ("vgi.title".to_string(), "perf — main".to_string()),
                 (
+                    "vgi.categories".to_string(),
+                    crate::meta::categories_json(),
+                ),
+                (
                     "vgi.keywords".to_string(),
                     crate::meta::keywords_json(
                         "perf, perf.data, samples, mmaps, comms, events, meta, callchain, \
@@ -157,17 +228,30 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                 ("topic".to_string(), "perf-data-decode".to_string()),
                 (
                     "vgi.doc_llm".to_string(),
-                    "perf.data decode functions: samples(src), mmaps(src), comms(src), \
-                     events(src), and meta(src). src is a perf.data path or BLOB. Raw IPs join to \
-                     mmaps by address range and to vgi-symbols by build-id."
+                    "The single schema for the perf worker: the perf.data decode functions. Each \
+                     takes a perf.data path or the raw capture bytes and returns typed rows — the \
+                     profiling samples with raw call chains, the address-space mappings and their \
+                     build-ids, the process/thread names, the sampled event attributes, and the \
+                     capture-wide host metadata. Raw instruction pointers range-join to a mapping \
+                     by address and to vgi-symbols by build-id. List the schema to see each \
+                     function."
                         .to_string(),
                 ),
                 (
                     "vgi.doc_md".to_string(),
-                    "The single schema for the `perf` worker. It holds the `perf.data` decode \
-                     table functions — `samples`, `mmaps`, `comms`, `events`, `meta` — plus the \
-                     `perf_version` scalar. Each table function takes a `src` perf.data path or \
-                     BLOB."
+                    "## perf — main\n\n\
+                     The single schema for the `perf` worker: the decode functions that turn a \
+                     Linux profiling capture into typed SQL rows. They are grouped into four \
+                     areas:\n\n\
+                     - **Profile samples** — the per-event rows with their raw, unsymbolicated \
+                     call chains.\n\
+                     - **Address space** — the process memory mappings and build-ids that make a \
+                     raw instruction pointer interpretable.\n\
+                     - **Capture context** — process/thread names, the sampled event attributes, \
+                     and the capture-wide host metadata.\n\
+                     - **Diagnostics** — operational introspection of the running worker.\n\n\
+                     Every decode function takes a `perf.data` path or the raw capture bytes. List \
+                     the schema to discover the individual functions."
                         .to_string(),
                 ),
                 // VGI506 representative example queries for the schema. These scan

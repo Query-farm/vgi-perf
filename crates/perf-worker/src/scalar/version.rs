@@ -33,6 +33,7 @@ impl ScalarFunction for PerfVersion {
                 "Return the perf worker version string, e.g. `perf_version()` → '0.1.0'.",
                 "version, build version, perf_version, diagnostics, worker version, semver",
                 "scalar/version.rs",
+                crate::meta::CAT_DIAGNOSTICS,
             ),
             ..Default::default()
         }

@@ -20,10 +20,11 @@ pub fn def() -> PerfTableFn {
          see what a capture measured and to label samples by event.",
         "Decode perf.data event attributes into rows: `event_id`, `name`, `type` \
          (hardware/software/…), `config`, `sample_period`, `sample_freq`. `src` is a path or BLOB. \
-         Example: `SELECT name, type, sample_freq FROM perf.main.events('/data/perf.data')`.",
+         Use it to see which events a capture measured and how they were sampled.",
         "perf, perf.data, event, perf_event_attr, attributes, cycles, instructions, hardware \
          event, software event, tracepoint, sample period, sample frequency, pmu",
         "table/events.rs",
+        crate::meta::CAT_CONTEXT,
     );
     tags.push((
         "vgi.result_columns_md".into(),
