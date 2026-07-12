@@ -27,27 +27,25 @@ pub fn def() -> PerfTableFn {
         crate::meta::CAT_CONTEXT,
     );
     tags.push((
-        "vgi.result_columns_md".into(),
-        "| column | type | description |\n\
-         |---|---|---|\n\
-         | `event_id` | UBIGINT | Primary event id, or the attribute index. |\n\
-         | `name` | VARCHAR | Event name, e.g. `cycles`. |\n\
-         | `type` | VARCHAR | `hardware`/`software`/`tracepoint`/`hw_cache`/`breakpoint`/`dynamic_pmu`. |\n\
-         | `config` | UBIGINT | Tracepoint/dynamic-PMU integer config; NULL for hardware/software/hw_cache/breakpoint. |\n\
-         | `sample_period` | UBIGINT | Fixed sampling period; NULL if frequency-sampled. |\n\
-         | `sample_freq` | UBIGINT | Target samples/sec; NULL if period-sampled. |"
-            .into(),
+        "vgi.result_columns_schema".into(),
+        crate::meta::result_columns_schema_json(&[
+            ("event_id", "UBIGINT", "Primary event id, or the attribute index."),
+            ("name", "VARCHAR", "Event name, e.g. 'cycles'."),
+            ("type", "VARCHAR", "Event kind: 'hardware', 'software', 'tracepoint', 'hw_cache', 'breakpoint', or 'dynamic_pmu'."),
+            ("config", "UBIGINT", "Tracepoint/dynamic-PMU integer config; NULL for hardware/software/hw_cache/breakpoint."),
+            ("sample_period", "UBIGINT", "Fixed sampling period; NULL if frequency-sampled."),
+            ("sample_freq", "UBIGINT", "Target samples/sec; NULL if period-sampled."),
+        ]),
     ));
-    tags.push((
-        "vgi.executable_examples".into(),
-        r#"[
-  {
-    "description": "List the events a capture sampled, with their kind and sampling policy.",
-    "sql": "SELECT name, type, sample_period, sample_freq FROM perf.main.events('/data/perf.data')"
-  }
-]"#
-        .into(),
-    ));
+    let blob = crate::meta::fixture_blob_src();
+    let examples = crate::meta::example_queries_json(&[(
+        "The events a capture sampled, with each event's kind and its fixed sampling period (or target frequency).",
+        &format!(
+            "SELECT name, type, sample_period, sample_freq FROM perf.main.events({blob}) ORDER BY name"
+        ),
+    )]);
+    tags.push(("vgi.executable_examples".into(), examples.clone()));
+    tags.push(("vgi.example_queries".into(), examples));
     PerfTableFn {
         table: Table::Events,
         name: "events",

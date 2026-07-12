@@ -29,31 +29,41 @@ pub fn def() -> PerfTableFn {
         crate::meta::CAT_SAMPLES,
     );
     tags.push((
-        "vgi.result_columns_md".into(),
-        "| column | type | description |\n\
-         |---|---|---|\n\
-         | `time` | UBIGINT | Capture timestamp (perf clock, ns); NULL if not recorded. |\n\
-         | `pid` | INTEGER | Process id. |\n\
-         | `tid` | INTEGER | Thread id. |\n\
-         | `cpu` | UINTEGER | CPU the sample was taken on; NULL if not recorded. |\n\
-         | `ip` | UBIGINT | Raw (unsymbolicated) instruction pointer. |\n\
-         | `period` | UBIGINT | Sample period at the time of the sample. |\n\
-         | `event` | VARCHAR | Event name, e.g. `cycles`. |\n\
-         | `callchain` | LIST(UBIGINT) | Raw IP frames, innermost→outermost; NULL if no call chains. |"
-            .into(),
+        "vgi.result_columns_schema".into(),
+        crate::meta::result_columns_schema_json(&[
+            ("time", "UBIGINT", "Capture timestamp (perf clock, nanoseconds); NULL if not recorded."),
+            ("pid", "INTEGER", "Process id the sample was taken in."),
+            ("tid", "INTEGER", "Thread id the sample was taken in."),
+            ("cpu", "UINTEGER", "CPU the sample was taken on; NULL if not recorded."),
+            ("ip", "UBIGINT", "Raw (unsymbolicated) instruction pointer."),
+            ("period", "UBIGINT", "Sample period at the time of the sample."),
+            ("event", "VARCHAR", "Event name, e.g. 'cycles'."),
+            ("callchain", "UBIGINT[]", "Raw IP frames, innermost to outermost; NULL if no call chains."),
+        ]),
     ));
-    let examples = r#"[
-  {
-    "description": "Decode the first ten samples of a perf.data file, with their raw call chains.",
-    "sql": "SELECT time, pid, ip, callchain FROM perf.main.samples('/data/perf.data') LIMIT 10"
-  },
-  {
-    "description": "Count samples per process to find the busiest pids.",
-    "sql": "SELECT pid, count(*) AS n FROM perf.main.samples('/data/perf.data') GROUP BY pid ORDER BY n DESC"
-  }
-]"#;
-    tags.push(("vgi.executable_examples".into(), examples.into()));
-    tags.push(("vgi.example_queries".into(), examples.into()));
+    let blob = crate::meta::fixture_blob_src();
+    let examples = crate::meta::example_queries_json(&[
+        (
+            "The ten most frequent raw instruction pointers in a capture — the hottest addresses, pre-symbolication.",
+            &format!(
+                "SELECT ip, count(*) AS hits FROM perf.main.samples({blob}) GROUP BY ip ORDER BY hits DESC LIMIT 10"
+            ),
+        ),
+        (
+            "Sample count per process, busiest first, to see which pid dominated the profile.",
+            &format!(
+                "SELECT pid, count(*) AS n FROM perf.main.samples({blob}) GROUP BY pid ORDER BY n DESC"
+            ),
+        ),
+        (
+            "The deepest call chains: each sample's leaf ip and how many frames its stack carries.",
+            &format!(
+                "SELECT ip, length(callchain) AS depth FROM perf.main.samples({blob}) WHERE callchain IS NOT NULL ORDER BY depth DESC, ip LIMIT 10"
+            ),
+        ),
+    ]);
+    tags.push(("vgi.executable_examples".into(), examples.clone()));
+    tags.push(("vgi.example_queries".into(), examples));
     PerfTableFn {
         table: Table::Samples,
         name: "samples",

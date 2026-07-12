@@ -27,7 +27,7 @@ mod scalar;
 mod source;
 mod table;
 
-use vgi::catalog::{CatSchema, CatalogModel};
+use vgi::catalog::{CatSchema, CatView, CatalogModel};
 use vgi::Worker;
 
 /// Worker version string, surfaced by `perf_version()`.
@@ -35,21 +35,15 @@ pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-/// Hex of the committed synthetic `data/callchain.data` fixture (a tiny, valid
-/// `cycles` perf.data capture: 3 samples with call chains, 2 mmap2 records with
-/// inline build-ids, 1 COMM, 1 event attr, empty feature bitmap). Embedded so the
-/// `vgi.agent_test_tasks` suite (VGI152/VGI920) is self-contained — the analyst
-/// decodes it via `from_hex(...)` as a BLOB `src`, no external file needed.
-const FIXTURE_HEX: &str = "50455246494c45326800000000000000400000000000000068000000000000004000000000000000a800000000000000a00100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000a00f000000000000a70100000000000000000000000000000000000000000000000000000000000000000000000000000300000002001800d2040000d20400006c6f6f70000000000a00000002405800d2040000d204000000004000000000000010000000000000000000000000000014000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000002f7573722f62696e2f6c6f6f700000000a00000002406000d2040000d204000000000000007f00000000200000000000000000000000000014000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00000000000000002f7573722f6c69622f6c6962632e736f2e3600000000000009000000020048000001400000000000d2040000d2040000e8030000000000000200000000000000a00f000000000000020000000000000000014000000000005000400000000000090000000200480000010000007f0000d2040000d2040000d0070000000000000200000000000000a00f000000000000020000000000000000010000007f0000000140000000000009000000020040000001400000000000d2040000d2040000b80b0000000000000300000000000000a00f00000000000001000000000000000001400000000000";
-
 /// The `vgi.agent_test_tasks` suite (VGI152/VGI920), self-contained via the
-/// embedded [`FIXTURE_HEX`] BLOB so `vgi-lint simulate` can execute every task's
-/// `reference_sql` against the attached worker without an external `perf.data`
-/// file. Each prompt hands the analyst the same `from_hex(...)` capture and asks
-/// for a single, unambiguous result with named columns; the reference results are
-/// pinned by the committed synthetic fixture (see `data/callchain.data`).
+/// embedded [`crate::meta::FIXTURE_HEX`] BLOB so `vgi-lint simulate` can execute
+/// every task's `reference_sql` against the attached worker without an external
+/// `perf.data` file. Each prompt hands the analyst the same `from_hex(...)`
+/// capture and asks for a single, unambiguous result with named columns; the
+/// reference results are pinned by the committed synthetic fixture (see
+/// `data/callchain.data`).
 fn agent_tasks_json() -> String {
-    let blob = format!("from_hex('{FIXTURE_HEX}')");
+    let blob = crate::meta::fixture_blob_src();
     let p_samples = format!(
         "A Linux perf.data capture is available as the BLOB {blob}. How many profiling samples \
          does it contain? Return a single row with one column named n."
@@ -92,7 +86,95 @@ fn agent_tasks_json() -> String {
         ("event_record_total", &p_meta, &r_meta),
         ("mapped_files_build_ids", &p_mmaps, &r_mmaps),
         ("process_name", &p_comms, &r_comms),
+        (
+            "browse_decode_functions",
+            "Without decoding any capture, which decode table functions does this worker expose \
+             for reading a perf.data file? There is a browsable reference table listing them. \
+             Return two columns, object_name and result_columns, one row per table function, \
+             ordered by object_name.",
+            "SELECT object_name, result_columns FROM perf.main.functions \
+             WHERE object_kind = 'table function' ORDER BY object_name",
+        ),
     ])
+}
+
+/// A no-argument, browsable reference of the decode functions this worker exposes
+/// (VGI146): one row per table function / scalar, with the columns it returns.
+/// Backed by a `VALUES` literal, so it scans entirely inside DuckDB with no
+/// `perf.data` file, network, or credential (clears VGI911 for free), and — being
+/// a real view rather than a table-function wrapper — is the shape VGI145/VGI146
+/// want. It lets an agent discover the worker's surface before it has a capture.
+fn functions_view() -> CatView {
+    let mut tags = crate::meta::object_tags(
+        "perf Decode Functions",
+        "A browsable, no-argument reference of every decode function the perf worker exposes: one \
+         row per object with its name, kind (table function or scalar function), the category it \
+         belongs to, a one-line summary, and the comma-separated list of columns it returns. \
+         Query it to discover what to call and what each call returns before you have a perf.data \
+         capture in hand — it takes no arguments and always returns the same rows. To actually \
+         decode a capture, call the named function with a perf.data path or the raw bytes.",
+        "A no-argument catalog of the perf worker's decode functions (`object_name`, \
+         `object_kind`, `category`, `summary`, `result_columns`) — browse \
+         `perf.main.functions` to discover what each function returns before decoding a capture.",
+        "functions, catalog, reference, discovery, decode functions, samples, mmaps, comms, \
+         events, meta, browsable, result columns, schema",
+        "main.rs",
+        crate::meta::CAT_REFERENCE,
+    );
+    tags.push(("domain".to_string(), "observability".to_string()));
+    tags.push(("topic".to_string(), "perf-data-decode".to_string()));
+    tags.push((
+        "vgi.example_queries".to_string(),
+        crate::meta::example_queries_json(&[(
+            "List the decode table functions and the columns each one returns.",
+            "SELECT object_name, result_columns FROM perf.main.functions \
+             WHERE object_kind = 'table function' ORDER BY object_name",
+        )]),
+    ));
+    CatView {
+        name: "functions".to_string(),
+        definition: "SELECT * FROM (VALUES \
+             ('samples', 'table function', 'Profile Samples', 'One row per profiling sample (PERF_RECORD_SAMPLE) with its raw call chain.', 'time, pid, tid, cpu, ip, period, event, callchain'), \
+             ('mmaps', 'table function', 'Address Space', 'One row per memory mapping (MMAP/MMAP2) with the build-id that makes a raw ip interpretable.', 'pid, tid, addr, len, pgoff, filename, build_id'), \
+             ('comms', 'table function', 'Capture Context', 'One row per command/thread-name record (COMM).', 'pid, tid, comm, time'), \
+             ('events', 'table function', 'Capture Context', 'One row per recorded event attribute — what was sampled and how.', 'event_id, name, type, config, sample_period, sample_freq'), \
+             ('meta', 'table function', 'Capture Context', 'A single row of capture-wide HEADER_* metadata.', 'hostname, arch, nrcpus, perf_version, cmdline, total_events'), \
+             ('perf_version', 'scalar function', 'Diagnostics', 'The running worker version string.', 'perf_version (VARCHAR)')) \
+             AS t(object_name, object_kind, category, summary, result_columns)"
+            .to_string(),
+        comment: Some(
+            "Browsable reference of the perf worker's decode functions — one row per object, with \
+             the columns it returns. Browse it to discover the surface before decoding a capture."
+                .to_string(),
+        ),
+        tags,
+        column_comments: vec![
+            (
+                "object_name".to_string(),
+                "The function name to call, e.g. `samples`, `mmaps`, `meta`.".to_string(),
+            ),
+            (
+                "object_kind".to_string(),
+                "Whether the object is a `table function` (decodes a capture into rows) or a \
+                 `scalar function`."
+                    .to_string(),
+            ),
+            (
+                "category".to_string(),
+                "The navigation category the object belongs to (Profile Samples, Address Space, \
+                 Capture Context, Diagnostics)."
+                    .to_string(),
+            ),
+            (
+                "summary".to_string(),
+                "A one-line description of what the function decodes / returns.".to_string(),
+            ),
+            (
+                "result_columns".to_string(),
+                "Comma-separated list of the columns the function returns.".to_string(),
+            ),
+        ],
+    }
 }
 
 /// Catalog + schema metadata (description, provenance, discovery tags) surfaced
@@ -146,17 +228,18 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  observability teams can run **CI performance-regression gates** and bulk profile \
                  analysis — diffing captures, ranking hot instruction pointers, and joining \
                  samples to the modules they fell in — without leaving SQL.\n\n\
-                 Attach the worker and query a capture by path or by raw bytes:\n\n\
+                 Attach the worker, then point `search_path` at its schema:\n\n\
                  ```sql\n\
                  ATTACH 'perf' (TYPE vgi, LOCATION '/path/to/perf-worker');\n\
-                 SET search_path = 'perf.main';\n\n\
-                 -- hottest instruction pointers (pre-symbolication), by mapped file\n\
-                 SELECT m.filename, count(*) AS hits\n\
-                 FROM perf.samples('/data/perf.data') s\n\
-                 JOIN perf.mmaps('/data/perf.data') m\n\
-                 \x20 ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len\n\
-                 GROUP BY 1 ORDER BY 2 DESC;\n\
+                 SET search_path = 'perf.main';\n\
                  ```\n\n\
+                 You then call a decode function with a `perf.data` path (or the raw capture \
+                 bytes) and analyze the rows in ordinary SQL. The marquee move is an \
+                 address-range join of each sample's raw `ip` to the memory mapping it fell in, \
+                 ranking the hottest modules — that query, and others, are shipped ready-to-run in \
+                 this worker's example queries and per-function documentation. Browse the \
+                 `perf.main.functions` reference table to see every function and the columns it \
+                 returns before you have a capture in hand.\n\n\
                  **What you get.** Each decode function takes one source argument — a path to a \
                  `perf.data` file, or the raw capture bytes already loaded into a column — and \
                  streams the decoded records out as ordinary typed rows. The profiling samples \
@@ -271,7 +354,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                         .to_string(),
                 ),
             ],
-            views: Vec::new(),
+            views: vec![functions_view()],
             macros: Vec::new(),
             // All five table functions take a `src` argument, so none is a
             // parameterless catalog table (VGI311); they are registered as table

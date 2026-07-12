@@ -57,7 +57,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo fmt --all -- --check
 cargo test --workspace --all-features
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
-uvx vgi-lint-check@0.37.0          # static metadata, --fail-on info (see vgi-lint.toml)
+uvx --from vgi-lint-check vgi-lint lint target/release/perf-worker --execute --fail-on info  # tracks latest; see vgi-lint.toml
 make test-sql                       # DuckDB sqllogictest E2E (subprocess/http/unix)
 ```
 

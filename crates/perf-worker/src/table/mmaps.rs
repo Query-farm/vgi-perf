@@ -28,30 +28,34 @@ pub fn def() -> PerfTableFn {
         crate::meta::CAT_MAPPINGS,
     );
     tags.push((
-        "vgi.result_columns_md".into(),
-        "| column | type | description |\n\
-         |---|---|---|\n\
-         | `pid` | INTEGER | Process id the mapping belongs to. |\n\
-         | `tid` | INTEGER | Thread id the mapping belongs to. |\n\
-         | `addr` | UBIGINT | Start address of the mapping. |\n\
-         | `len` | UBIGINT | Length in bytes; the mapping covers `[addr, addr+len)`. |\n\
-         | `pgoff` | UBIGINT | Offset into the mapped file. |\n\
-         | `filename` | VARCHAR | Mapped file path, e.g. `/usr/lib/libc.so.6`. |\n\
-         | `build_id` | VARCHAR | DSO build-id (lowercase hex); NULL if unknown. |"
-            .into(),
+        "vgi.result_columns_schema".into(),
+        crate::meta::result_columns_schema_json(&[
+            ("pid", "INTEGER", "Process id the mapping belongs to."),
+            ("tid", "INTEGER", "Thread id the mapping belongs to."),
+            ("addr", "UBIGINT", "Start address of the mapping."),
+            ("len", "UBIGINT", "Length in bytes; the mapping covers [addr, addr+len)."),
+            ("pgoff", "UBIGINT", "Offset into the mapped file."),
+            ("filename", "VARCHAR", "Mapped file path, e.g. '/usr/lib/libc.so.6'."),
+            ("build_id", "VARCHAR", "DSO build-id (lowercase hex); NULL if unknown."),
+        ]),
     ));
-    let examples = r#"[
-  {
-    "description": "List every mapped DSO and its build-id (the input to vgi-symbols).",
-    "sql": "SELECT filename, build_id FROM perf.main.mmaps('/data/perf.data') WHERE build_id IS NOT NULL"
-  },
-  {
-    "description": "Attribute each sample ip to the DSO it fell in, via an address-range join.",
-    "sql": "SELECT m.filename, count(*) AS hits FROM perf.main.samples('/data/perf.data') s JOIN perf.main.mmaps('/data/perf.data') m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY 1 ORDER BY 2 DESC"
-  }
-]"#;
-    tags.push(("vgi.executable_examples".into(), examples.into()));
-    tags.push(("vgi.example_queries".into(), examples.into()));
+    let blob = crate::meta::fixture_blob_src();
+    let examples = crate::meta::example_queries_json(&[
+        (
+            "Every mapped DSO with a known build-id (the input to vgi-symbols), ordered by file.",
+            &format!(
+                "SELECT filename, build_id FROM perf.main.mmaps({blob}) WHERE build_id IS NOT NULL ORDER BY filename"
+            ),
+        ),
+        (
+            "The hottest mapped files: attribute each sample ip to the DSO it fell in via an address-range join, then rank by hit count.",
+            &format!(
+                "SELECT m.filename, count(*) AS hits FROM perf.main.samples({blob}) s JOIN perf.main.mmaps({blob}) m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY m.filename ORDER BY hits DESC"
+            ),
+        ),
+    ]);
+    tags.push(("vgi.executable_examples".into(), examples.clone()));
+    tags.push(("vgi.example_queries".into(), examples));
     PerfTableFn {
         table: Table::Mmaps,
         name: "mmaps",

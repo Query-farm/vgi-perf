@@ -22,25 +22,21 @@ pub fn def() -> PerfTableFn {
         crate::meta::CAT_CONTEXT,
     );
     tags.push((
-        "vgi.result_columns_md".into(),
-        "| column | type | description |\n\
-         |---|---|---|\n\
-         | `pid` | INTEGER | Process id this name applies to. |\n\
-         | `tid` | INTEGER | Thread id this name applies to. |\n\
-         | `comm` | VARCHAR | The command / thread name. |\n\
-         | `time` | UBIGINT | Record timestamp; NULL if not recorded. |"
-            .into(),
+        "vgi.result_columns_schema".into(),
+        crate::meta::result_columns_schema_json(&[
+            ("pid", "INTEGER", "Process id this name applies to."),
+            ("tid", "INTEGER", "Thread id this name applies to."),
+            ("comm", "VARCHAR", "The command / thread name."),
+            ("time", "UBIGINT", "Record timestamp; NULL if not recorded."),
+        ]),
     ));
-    tags.push((
-        "vgi.executable_examples".into(),
-        r#"[
-  {
-    "description": "Map each process id to its command name.",
-    "sql": "SELECT DISTINCT pid, comm FROM perf.main.comms('/data/perf.data') ORDER BY pid"
-  }
-]"#
-        .into(),
-    ));
+    let blob = crate::meta::fixture_blob_src();
+    let examples = crate::meta::example_queries_json(&[(
+        "The distinct process/thread names in a capture, one row per pid — the lookup that turns a numeric pid from `samples` into a human-readable command.",
+        &format!("SELECT DISTINCT pid, comm FROM perf.main.comms({blob}) ORDER BY pid"),
+    )]);
+    tags.push(("vgi.executable_examples".into(), examples.clone()));
+    tags.push(("vgi.example_queries".into(), examples));
     PerfTableFn {
         table: Table::Comms,
         name: "comms",

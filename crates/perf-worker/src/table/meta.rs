@@ -25,28 +25,25 @@ pub fn def() -> PerfTableFn {
         crate::meta::CAT_CONTEXT,
     );
     tags.push((
-        "vgi.result_columns_md".into(),
-        "Returns exactly one row.\n\n\
-         | column | type | description |\n\
-         |---|---|---|\n\
-         | `hostname` | VARCHAR | Capture host name; NULL if absent. |\n\
-         | `arch` | VARCHAR | Machine architecture, e.g. `x86_64`; NULL if absent. |\n\
-         | `nrcpus` | UINTEGER | CPUs available on the capture host; NULL if absent. |\n\
-         | `perf_version` | VARCHAR | perf tool version; NULL if absent. |\n\
-         | `cmdline` | LIST(VARCHAR) | The `perf record` command line; NULL if absent. |\n\
-         | `total_events` | UBIGINT | Count of event records in the data section. |"
-            .into(),
+        "vgi.result_columns_schema".into(),
+        crate::meta::result_columns_schema_json(&[
+            ("hostname", "VARCHAR", "Capture host name; NULL if absent."),
+            ("arch", "VARCHAR", "Machine architecture, e.g. 'x86_64'; NULL if absent."),
+            ("nrcpus", "UINTEGER", "CPUs available on the capture host; NULL if absent."),
+            ("perf_version", "VARCHAR", "perf tool version; NULL if absent."),
+            ("cmdline", "VARCHAR[]", "The 'perf record' command line, split into arguments; NULL if absent."),
+            ("total_events", "UBIGINT", "Count of event records in the data section."),
+        ]),
     ));
-    tags.push((
-        "vgi.executable_examples".into(),
-        r#"[
-  {
-    "description": "Read the capture-wide metadata of a perf.data file (one row).",
-    "sql": "SELECT hostname, arch, nrcpus, perf_version, cmdline, total_events FROM perf.main.meta('/data/perf.data')"
-  }
-]"#
-        .into(),
-    ));
+    let blob = crate::meta::fixture_blob_src();
+    let examples = crate::meta::example_queries_json(&[(
+        "Read the capture-wide metadata of a perf.data file (exactly one row): host, arch, tool version, and the total event-record count.",
+        &format!(
+            "SELECT hostname, arch, nrcpus, perf_version, cmdline, total_events FROM perf.main.meta({blob})"
+        ),
+    )]);
+    tags.push(("vgi.executable_examples".into(), examples.clone()));
+    tags.push(("vgi.example_queries".into(), examples));
     PerfTableFn {
         table: Table::Meta,
         name: "meta",
