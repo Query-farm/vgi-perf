@@ -33,10 +33,22 @@ pub fn def() -> PerfTableFn {
             ("pid", "INTEGER", "Process id the mapping belongs to."),
             ("tid", "INTEGER", "Thread id the mapping belongs to."),
             ("addr", "UBIGINT", "Start address of the mapping."),
-            ("len", "UBIGINT", "Length in bytes; the mapping covers [addr, addr+len)."),
+            (
+                "len",
+                "UBIGINT",
+                "Length in bytes; the mapping covers [addr, addr+len).",
+            ),
             ("pgoff", "UBIGINT", "Offset into the mapped file."),
-            ("filename", "VARCHAR", "Mapped file path, e.g. '/usr/lib/libc.so.6'."),
-            ("build_id", "VARCHAR", "DSO build-id (lowercase hex); NULL if unknown."),
+            (
+                "filename",
+                "VARCHAR",
+                "Mapped file path, e.g. '/usr/lib/libc.so.6'.",
+            ),
+            (
+                "build_id",
+                "VARCHAR",
+                "DSO build-id (lowercase hex); NULL if unknown.",
+            ),
         ]),
     ));
     let blob = crate::meta::fixture_blob_src();

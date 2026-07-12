@@ -31,14 +31,30 @@ pub fn def() -> PerfTableFn {
     tags.push((
         "vgi.result_columns_schema".into(),
         crate::meta::result_columns_schema_json(&[
-            ("time", "UBIGINT", "Capture timestamp (perf clock, nanoseconds); NULL if not recorded."),
+            (
+                "time",
+                "UBIGINT",
+                "Capture timestamp (perf clock, nanoseconds); NULL if not recorded.",
+            ),
             ("pid", "INTEGER", "Process id the sample was taken in."),
             ("tid", "INTEGER", "Thread id the sample was taken in."),
-            ("cpu", "UINTEGER", "CPU the sample was taken on; NULL if not recorded."),
+            (
+                "cpu",
+                "UINTEGER",
+                "CPU the sample was taken on; NULL if not recorded.",
+            ),
             ("ip", "UBIGINT", "Raw (unsymbolicated) instruction pointer."),
-            ("period", "UBIGINT", "Sample period at the time of the sample."),
+            (
+                "period",
+                "UBIGINT",
+                "Sample period at the time of the sample.",
+            ),
             ("event", "VARCHAR", "Event name, e.g. 'cycles'."),
-            ("callchain", "UBIGINT[]", "Raw IP frames, innermost to outermost; NULL if no call chains."),
+            (
+                "callchain",
+                "UBIGINT[]",
+                "Raw IP frames, innermost to outermost; NULL if no call chains.",
+            ),
         ]),
     ));
     let blob = crate::meta::fixture_blob_src();

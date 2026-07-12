@@ -28,11 +28,31 @@ pub fn def() -> PerfTableFn {
         "vgi.result_columns_schema".into(),
         crate::meta::result_columns_schema_json(&[
             ("hostname", "VARCHAR", "Capture host name; NULL if absent."),
-            ("arch", "VARCHAR", "Machine architecture, e.g. 'x86_64'; NULL if absent."),
-            ("nrcpus", "UINTEGER", "CPUs available on the capture host; NULL if absent."),
-            ("perf_version", "VARCHAR", "perf tool version; NULL if absent."),
-            ("cmdline", "VARCHAR[]", "The 'perf record' command line, split into arguments; NULL if absent."),
-            ("total_events", "UBIGINT", "Count of event records in the data section."),
+            (
+                "arch",
+                "VARCHAR",
+                "Machine architecture, e.g. 'x86_64'; NULL if absent.",
+            ),
+            (
+                "nrcpus",
+                "UINTEGER",
+                "CPUs available on the capture host; NULL if absent.",
+            ),
+            (
+                "perf_version",
+                "VARCHAR",
+                "perf tool version; NULL if absent.",
+            ),
+            (
+                "cmdline",
+                "VARCHAR[]",
+                "The 'perf record' command line, split into arguments; NULL if absent.",
+            ),
+            (
+                "total_events",
+                "UBIGINT",
+                "Count of event records in the data section.",
+            ),
         ]),
     ));
     let blob = crate::meta::fixture_blob_src();
