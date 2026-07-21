@@ -19,8 +19,11 @@ format into SQL tables under the catalog `perf`, schema `main`.
   - `table/` — the five `TableFunction`s (`samples`/`mmaps`/`comms`/`events`/
     `meta`), all one `PerfTableFn` struct parameterized by a `Table`, plus
     `scan.rs` — the shared `PerfScan` producer with the externalized scan cursor.
-  - `scalar/version.rs` — `perf_version()`.
-  - `main.rs` — `Worker` setup + catalog/schema discovery metadata.
+  - `main.rs` — `Worker` setup + catalog/schema discovery metadata. The build
+    version is published as the catalog `implementation_version` (read from
+    `duckdb_databases().tags['vgi_resolved_implementation_version']`); there is no
+    `perf_version()` scalar (VGI328 — a parameterless version function duplicates
+    catalog metadata and can drift from the running build).
 
 The dependency points one way: `perf-worker` → `perf-core`. Keep all `perf.data`
 parsing in `perf-core` (Arrow-free, unit-testable); keep Arrow/RPC in the worker.
@@ -38,7 +41,8 @@ parsing in `perf-core` (Arrow-free, unit-testable); keep Arrow/RPC in the worker
   the good rows still return; the decoder never panics (proptest enforces this).
 - **License is MIT** (fleet convention), in `Cargo.toml`, `LICENSE`, the catalog
   `vgi.license` tag, and per-file copyright headers where present.
-- **`perf_version()`** is the conventional `<catalog>_version()` scalar.
+- **Build version** ships as the catalog `implementation_version`, not as a
+  scalar function (VGI328).
 
 ## Platform facts
 

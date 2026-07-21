@@ -10,7 +10,7 @@ pub fn def() -> PerfTableFn {
         "perf.data Memory Mappings",
         "Decode the memory-mapping records (PERF_RECORD_MMAP / MMAP2) of a Linux perf.data capture \
          into rows — which shared object / DSO backs each range of a process's address space. \
-         `src` is a VARCHAR path or a BLOB of perf.data bytes. Columns: `pid`, `tid`, `addr` \
+         `src` is a `VARCHAR` path or a `BLOB` of perf.data bytes. Columns: `pid`, `tid`, `addr` \
          (start address), `len` (length in bytes — the mapping covers [addr, addr+len)), `pgoff` \
          (offset into the file), `filename` (e.g. '/usr/lib/libc.so.6', '[vdso]'), and `build_id` \
          (the DSO build-id as lowercase hex, from an inline MMAP2 build-id record or the \
@@ -21,7 +21,7 @@ pub fn def() -> PerfTableFn {
         "Decode perf.data memory mappings into rows: `pid`, `tid`, `addr`, `len`, `pgoff`, \
          `filename`, `build_id` (lowercase hex, or NULL). Range-join `samples.ip BETWEEN addr AND \
          addr+len` to attribute an IP to a DSO; `build_id` feeds vgi-symbols. `src` is a path or \
-         BLOB.",
+         `BLOB`.",
         "perf, perf.data, mmap, mmap2, memory mapping, dso, shared object, build id, build_id, \
          symbolication, symbols, address range, module, library, vdso",
         "table/mmaps.rs",

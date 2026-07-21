@@ -9,18 +9,19 @@ pub fn def() -> PerfTableFn {
     let mut tags = crate::meta::object_tags(
         "perf.data Samples",
         "Decode the profiling samples (PERF_RECORD_SAMPLE) of a Linux perf.data capture into rows \
-         — one per sampled event (e.g. a CPU `cycles` overflow). `src` is a VARCHAR path to a \
-         perf.data file or a BLOB of perf.data bytes. Columns: `time` (perf-clock nanoseconds), \
-         `pid`, `tid`, `cpu`, `ip` (the raw, unsymbolicated instruction pointer as UBIGINT), \
-         `period`, `event` (the event name, e.g. 'cycles'), and `callchain` (a LIST(UBIGINT) of \
+         — one per sampled event (e.g. a CPU `cycles` overflow). `src` is a `VARCHAR` path to a \
+         perf.data file or a `BLOB` of perf.data bytes. Columns: `time` (perf-clock nanoseconds), \
+         `pid`, `tid`, `cpu`, `ip` (the raw, unsymbolicated instruction pointer as `UBIGINT`), \
+         `period`, `event` (the event name, e.g. 'cycles'), and `callchain` (a `LIST(UBIGINT)` of \
          raw instruction pointers from innermost to outermost frame, in capture order). \
          Symbolication is NOT done here — join `ip` (and each callchain frame) to `mmaps` to find \
          the backing DSO, then to vgi-symbols via the build-id. Any column the capture omits \
          (no PERF_SAMPLE_CPU, no call chains, …) is NULL. Use it to find hot instruction pointers, \
          build flame data, or diff captures for CI performance-regression gates.",
         "Decode perf.data profiling samples into rows: `time`, `pid`, `tid`, `cpu`, `ip` \
-         (raw UBIGINT), `period`, `event`, and `callchain` (LIST(UBIGINT) of raw IPs). `src` is a \
-         path or a BLOB. IPs are unsymbolicated — join to `mmaps` + vgi-symbols to resolve. Rank \
+         (raw `UBIGINT`), `period`, `event`, and `callchain` (`LIST(UBIGINT)` of raw IPs). `src` \
+         is a path or a `BLOB`. IPs are unsymbolicated — join to `mmaps` + vgi-symbols to resolve. \
+         Rank \
          raw IPs by frequency to find the hottest addresses in a capture.",
         "perf, perf.data, perf record, samples, profiling, profiler, instruction pointer, ip, \
          callchain, call stack, stack, cycles, hotspot, flamegraph, CPU profile, performance, \

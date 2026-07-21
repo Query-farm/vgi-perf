@@ -23,14 +23,15 @@
 
 mod arrow_build;
 mod meta;
-mod scalar;
 mod source;
 mod table;
 
 use vgi::catalog::{CatSchema, CatView, CatalogModel};
 use vgi::Worker;
 
-/// Worker version string, surfaced by `perf_version()`.
+/// Worker build version, published as the catalog `implementation_version` (an
+/// agent reads it from `duckdb_databases().tags['vgi_resolved_implementation_version']`
+/// without spending a query, and it can never drift from the running build).
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
@@ -75,12 +76,6 @@ fn agent_tasks_json() -> String {
         format!("SELECT filename, build_id FROM perf.main.mmaps({blob}) ORDER BY filename");
     let r_comms = format!("SELECT comm FROM perf.main.comms({blob})");
     crate::meta::agent_test_tasks_json(&[
-        (
-            "worker_version",
-            "What version of the perf worker is running? Return a single row with one column \
-             named version.",
-            "SELECT perf.main.perf_version() AS version",
-        ),
         ("sample_count", &p_samples, &r_samples),
         ("event_policy", &p_events, &r_events),
         ("event_record_total", &p_meta, &r_meta),
@@ -99,7 +94,7 @@ fn agent_tasks_json() -> String {
 }
 
 /// A no-argument, browsable reference of the decode functions this worker exposes
-/// (VGI146): one row per table function / scalar, with the columns it returns.
+/// (VGI146): one row per decode table function, with the columns it returns.
 /// Backed by a `VALUES` literal, so it scans entirely inside DuckDB with no
 /// `perf.data` file, network, or credential (clears VGI911 for free), and — being
 /// a real view rather than a table-function wrapper — is the shape VGI145/VGI146
@@ -107,12 +102,12 @@ fn agent_tasks_json() -> String {
 fn functions_view() -> CatView {
     let mut tags = crate::meta::object_tags(
         "perf Decode Functions",
-        "A browsable, no-argument reference of every decode function the perf worker exposes: one \
-         row per object with its name, kind (table function or scalar function), the category it \
-         belongs to, a one-line summary, and the comma-separated list of columns it returns. \
-         Query it to discover what to call and what each call returns before you have a perf.data \
-         capture in hand — it takes no arguments and always returns the same rows. To actually \
-         decode a capture, call the named function with a perf.data path or the raw bytes.",
+        "A browsable, no-argument reference of every decode table function the perf worker \
+         exposes: one row per function with its name, kind, the category it belongs to, a \
+         one-line summary, and the comma-separated list of columns it returns. Query it to \
+         discover what to call and what each call returns before you have a perf.data capture in \
+         hand — it takes no arguments and always returns the same rows. To actually decode a \
+         capture, call the named function with a perf.data path or the raw bytes.",
         "A no-argument catalog of the perf worker's decode functions (`object_name`, \
          `object_kind`, `category`, `summary`, `result_columns`) — browse \
          `perf.main.functions` to discover what each function returns before decoding a capture.",
@@ -138,8 +133,7 @@ fn functions_view() -> CatView {
              ('mmaps', 'table function', 'Address Space', 'One row per memory mapping (MMAP/MMAP2) with the build-id that makes a raw ip interpretable.', 'pid, tid, addr, len, pgoff, filename, build_id'), \
              ('comms', 'table function', 'Capture Context', 'One row per command/thread-name record (COMM).', 'pid, tid, comm, time'), \
              ('events', 'table function', 'Capture Context', 'One row per recorded event attribute — what was sampled and how.', 'event_id, name, type, config, sample_period, sample_freq'), \
-             ('meta', 'table function', 'Capture Context', 'A single row of capture-wide HEADER_* metadata.', 'hostname, arch, nrcpus, perf_version, cmdline, total_events'), \
-             ('perf_version', 'scalar function', 'Diagnostics', 'The running worker version string.', 'perf_version (VARCHAR)')) \
+             ('meta', 'table function', 'Capture Context', 'A single row of capture-wide HEADER_* metadata.', 'hostname, arch, nrcpus, perf_version, cmdline, total_events')) \
              AS t(object_name, object_kind, category, summary, result_columns)"
             .to_string(),
         comment: Some(
@@ -155,14 +149,14 @@ fn functions_view() -> CatView {
             ),
             (
                 "object_kind".to_string(),
-                "Whether the object is a `table function` (decodes a capture into rows) or a \
-                 `scalar function`."
+                "The kind of object — always `table function` here (each decodes a capture into \
+                 rows)."
                     .to_string(),
             ),
             (
                 "category".to_string(),
                 "The navigation category the object belongs to (Profile Samples, Address Space, \
-                 Capture Context, Diagnostics)."
+                 Capture Context)."
                     .to_string(),
             ),
             (
@@ -214,9 +208,10 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  in to find the backing shared object, then feed that mapping's build-id to \
                  vgi-symbols for native symbolication. Each decode function takes one source \
                  argument — a path to a perf.data file, or the raw capture bytes already loaded \
-                 into a column. List the schema to discover the individual functions. Reach for \
-                 it for bulk, relational analysis of Linux perf profiles rather than single-file \
-                 interactive inspection."
+                 into a column — and there is one per record kind: samples, memory mappings, comm \
+                 records, event attributes, and capture metadata. Reach for it for bulk, \
+                 relational analysis of Linux perf profiles rather than single-file interactive \
+                 inspection."
                     .to_string(),
             ),
             (
@@ -245,9 +240,8 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  streams the decoded records out as ordinary typed rows. The profiling samples \
                  (with their raw call chains), the process address-space mappings, the recorded \
                  event attributes, the process/thread names, and the capture-wide host metadata \
-                 are each a separate function; list the schema to discover them. Ranges, IDs, and \
-                 timestamps come through as real integer columns so they join and aggregate \
-                 directly in SQL.\n\n\
+                 are each a separate function. Ranges, IDs, and timestamps come through as real \
+                 integer columns so they join and aggregate directly in SQL.\n\n\
                  **Raw IPs, by design.** Instruction pointers and call-chain frames are emitted \
                  **unsymbolicated**. The `mmaps` records — with their `build_id`s — are what make \
                  a raw `ip` interpretable: range-join `samples.ip BETWEEN m.addr AND m.addr + \
@@ -260,11 +254,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  out of scope (DuckDB's `read_csv` already covers it), as is symbolication \
                  (→ vgi-symbols) and `perf.data` *writing*. `perf.data` varies by kernel and perf \
                  build; any `HEADER_*` feature section a capture omits comes back as NULL columns \
-                 rather than failing the query.\n\n\
-                 The `perf` worker is open source and part of the [Query.Farm](https://query.farm) \
-                 VGI ecosystem of DuckDB workers — see the [source repository on \
-                 GitHub](https://github.com/Query-farm/vgi-perf) for the full column reference and \
-                 examples."
+                 rather than failing the query."
                     .to_string(),
             ),
             (
@@ -287,6 +277,12 @@ fn catalog_metadata(name: &str) -> CatalogModel {
             ),
         ],
         source_url: Some("https://github.com/Query-farm/vgi-perf".to_string()),
+        // Publish the worker build version as the catalog implementation_version
+        // (VGI328). An agent reads it from
+        // `duckdb_databases().tags['vgi_resolved_implementation_version']` without
+        // spending a query, and it can never drift from the running binary — which
+        // is why there is no `perf_version()` scalar.
+        implementation_version: Some(version().to_string()),
         schemas: vec![CatSchema {
             name: "main".to_string(),
             comment: Some(
@@ -316,25 +312,22 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                      profiling samples with raw call chains, the address-space mappings and their \
                      build-ids, the process/thread names, the sampled event attributes, and the \
                      capture-wide host metadata. Raw instruction pointers range-join to a mapping \
-                     by address and to vgi-symbols by build-id. List the schema to see each \
-                     function."
+                     by address and to vgi-symbols by build-id."
                         .to_string(),
                 ),
                 (
                     "vgi.doc_md".to_string(),
                     "## perf — main\n\n\
                      The single schema for the `perf` worker: the decode functions that turn a \
-                     Linux profiling capture into typed SQL rows. They are grouped into four \
+                     Linux profiling capture into typed SQL rows. They are grouped into three \
                      areas:\n\n\
                      - **Profile samples** — the per-event rows with their raw, unsymbolicated \
                      call chains.\n\
                      - **Address space** — the process memory mappings and build-ids that make a \
                      raw instruction pointer interpretable.\n\
                      - **Capture context** — process/thread names, the sampled event attributes, \
-                     and the capture-wide host metadata.\n\
-                     - **Diagnostics** — operational introspection of the running worker.\n\n\
-                     Every decode function takes a `perf.data` path or the raw capture bytes. List \
-                     the schema to discover the individual functions."
+                     and the capture-wide host metadata.\n\n\
+                     Every decode function takes a `perf.data` path or the raw capture bytes."
                         .to_string(),
                 ),
                 // VGI506 representative example queries for the schema. These scan
@@ -348,8 +341,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
   {"description": "List the events the capture sampled and how.", "sql": "SELECT name, type, sample_period, sample_freq FROM perf.main.events('/data/perf.data')"},
   {"description": "The first ten samples with their raw call chains.", "sql": "SELECT time, pid, ip, callchain FROM perf.main.samples('/data/perf.data') LIMIT 10"},
   {"description": "Every mapped DSO and its build-id (the vgi-symbols input).", "sql": "SELECT filename, build_id FROM perf.main.mmaps('/data/perf.data') WHERE build_id IS NOT NULL"},
-  {"description": "Hottest mapped files via an ip-to-mmap address-range join.", "sql": "SELECT m.filename, count(*) AS hits FROM perf.main.samples('/data/perf.data') s JOIN perf.main.mmaps('/data/perf.data') m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY 1 ORDER BY 2 DESC"},
-  {"description": "The running worker version.", "sql": "SELECT perf.main.perf_version()"}
+  {"description": "Hottest mapped files via an ip-to-mmap address-range join.", "sql": "SELECT m.filename, count(*) AS hits FROM perf.main.samples('/data/perf.data') s JOIN perf.main.mmaps('/data/perf.data') m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY 1 ORDER BY 2 DESC"}
 ]"#
                         .to_string(),
                 ),
@@ -381,7 +373,6 @@ fn main() {
         std::env::var("VGI_WORKER_CATALOG_NAME").unwrap_or_else(|_| "perf".to_string());
 
     let mut worker = Worker::new();
-    scalar::register(&mut worker);
     table::register(&mut worker);
     worker.set_catalog(catalog_metadata(&catalog_name));
     worker.run();

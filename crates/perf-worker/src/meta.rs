@@ -94,7 +94,6 @@ pub const CAT_SAMPLES: &str = "Profile Samples";
 pub const CAT_MAPPINGS: &str = "Address Space";
 pub const CAT_CONTEXT: &str = "Capture Context";
 pub const CAT_REFERENCE: &str = "Reference";
-pub const CAT_DIAGNOSTICS: &str = "Diagnostics";
 
 /// The ordered `vgi.categories` registry declared on schema `main` (VGI413): a
 /// JSON array of `{"name","description"}` objects, one per `CAT_*` constant.
@@ -127,10 +126,6 @@ pub fn categories_json() -> String {
             "Browsable reference tables for discovery — a no-argument catalog of the decode \
              functions this worker exposes and the columns each returns, so an agent can learn \
              the surface before it has a capture in hand.",
-        ),
-        (
-            CAT_DIAGNOSTICS,
-            "Operational introspection of the running worker, such as its version string.",
         ),
     ];
     let items: Vec<String> = cats

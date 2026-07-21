@@ -9,8 +9,9 @@ pub fn def() -> PerfTableFn {
     let mut tags = crate::meta::object_tags(
         "perf.data Event Attributes",
         "Decode the recorded event attributes of a Linux perf.data capture into rows — which perf \
-         events were sampled, and with what sampling policy. `src` is a VARCHAR path or a BLOB of \
-         perf.data bytes. Columns: `event_id` (the primary event id, or the attribute index when \
+         events were sampled, and with what sampling policy. `src` is a `VARCHAR` path or a `BLOB` \
+         of perf.data bytes. Columns: `event_id` (the primary event id, or the attribute index \
+         when \
          no ids are recorded), `name` (e.g. 'cycles', 'instructions'), `type` (the event kind: \
          'hardware', 'software', 'tracepoint', 'hw_cache', 'breakpoint', or 'dynamic_pmu'), \
          `config` (the integer config, surfaced only for tracepoint / dynamic-PMU events; NULL for \
@@ -19,7 +20,8 @@ pub fn def() -> PerfTableFn {
          period-sampled), and `sample_freq` (target samples/sec, if frequency-sampled). Use it to \
          see what a capture measured and to label samples by event.",
         "Decode perf.data event attributes into rows: `event_id`, `name`, `type` \
-         (hardware/software/…), `config`, `sample_period`, `sample_freq`. `src` is a path or BLOB. \
+         (hardware/software/…), `config`, `sample_period`, `sample_freq`. `src` is a path or \
+         `BLOB`. \
          Use it to see which events a capture measured and how they were sampled.",
         "perf, perf.data, event, perf_event_attr, attributes, cycles, instructions, hardware \
          event, software event, tracepoint, sample period, sample frequency, pmu",

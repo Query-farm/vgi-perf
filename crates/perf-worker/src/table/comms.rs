@@ -9,13 +9,14 @@ pub fn def() -> PerfTableFn {
     let mut tags = crate::meta::object_tags(
         "perf.data Comm Records",
         "Decode the command/thread-name records (PERF_RECORD_COMM) of a Linux perf.data capture \
-         into rows — what each pid/tid is called (e.g. 'chrome', 'postgres'). `src` is a VARCHAR \
-         path or a BLOB of perf.data bytes. Columns: `pid`, `tid`, `comm` (the name), and `time` \
+         into rows — what each pid/tid is called (e.g. 'chrome', 'postgres'). `src` is a \
+         `VARCHAR` path or a `BLOB` of perf.data bytes. Columns: `pid`, `tid`, `comm` (the name), \
+         and `time` \
          (the record timestamp, or NULL if the capture records no sample-id times). Join `pid` to \
          `samples.pid` to turn a numeric pid into a human-readable process name when reporting \
          hotspots.",
         "Decode perf.data COMM records into rows: `pid`, `tid`, `comm` (name), `time`. Join \
-         `pid` to `samples.pid` to label samples with a process name. `src` is a path or BLOB.",
+         `pid` to `samples.pid` to label samples with a process name. `src` is a path or `BLOB`.",
         "perf, perf.data, comm, process name, thread name, command, pid, tid, exec, process \
          resolution",
         "table/comms.rs",

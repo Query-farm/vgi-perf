@@ -9,16 +9,17 @@ pub fn def() -> PerfTableFn {
     let mut tags = crate::meta::object_tags(
         "perf.data Capture Metadata",
         "Decode the capture-wide metadata of a Linux perf.data file into a single row, read from \
-         its HEADER_* feature sections. `src` is a VARCHAR path or a BLOB of perf.data bytes. \
+         its HEADER_* feature sections. `src` is a `VARCHAR` path or a `BLOB` of perf.data bytes. \
          Columns: `hostname`, `arch` (e.g. 'x86_64'), `nrcpus` (CPUs available on the capture \
          host), `perf_version` (the perf tool version), `cmdline` (the `perf record` command line \
-         as a LIST(VARCHAR)), and `total_events` (the count of event records in the data section). \
+         as a `LIST(VARCHAR)`), and `total_events` (the count of event records in the data \
+         section). \
          perf.data varies by kernel and perf build — any feature section a given capture omits \
          comes back NULL (graceful degradation). Use it to label a fleet of captures by host / \
          arch / tool version and to sanity-check event counts.",
         "Decode perf.data capture metadata into one row: `hostname`, `arch`, `nrcpus`, \
-         `perf_version`, `cmdline` (LIST(VARCHAR)), `total_events`. Omitted HEADER_* sections are \
-         NULL. `src` is a path or BLOB.",
+         `perf_version`, `cmdline` (`LIST(VARCHAR)`), `total_events`. Omitted HEADER_* sections \
+         are NULL. `src` is a path or `BLOB`.",
         "perf, perf.data, metadata, header, hostname, arch, architecture, nrcpus, perf version, \
          cmdline, command line, total events, capture info",
         "table/meta.rs",
