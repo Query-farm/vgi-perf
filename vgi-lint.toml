@@ -15,5 +15,3 @@ location = "target/release/perf-worker"
 select = ["ALL"]
 fail_on = "info"
 
-[tool.vgi-lint-check.options]
-column_comment_min_ratio = 0.8
