@@ -67,12 +67,6 @@ pub fn def() -> PerfTableFn {
             ),
         ),
         (
-            "Sample count per process, busiest first, to see which pid dominated the profile.",
-            &format!(
-                "SELECT pid, count(*) AS n FROM perf.main.samples({blob}) GROUP BY pid ORDER BY n DESC"
-            ),
-        ),
-        (
             "The deepest call chains: each sample's leaf ip and how many frames its stack carries.",
             &format!(
                 "SELECT ip, length(callchain) AS depth FROM perf.main.samples({blob}) WHERE callchain IS NOT NULL ORDER BY depth DESC, ip LIMIT 10"

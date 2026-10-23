@@ -54,15 +54,15 @@ pub fn def() -> PerfTableFn {
     let blob = crate::meta::fixture_blob_src();
     let examples = crate::meta::example_queries_json(&[
         (
-            "Every mapped DSO with a known build-id (the input to vgi-symbols), ordered by file.",
+            "Mapped DSOs with a known build-id (for vgi-symbols).",
             &format!(
                 "SELECT filename, build_id FROM perf.main.mmaps({blob}) WHERE build_id IS NOT NULL ORDER BY filename"
             ),
         ),
         (
-            "The hottest mapped files: attribute each sample ip to the DSO it fell in via an address-range join, then rank by hit count.",
+            "Hottest mapped files: join sample ips to DSOs by address range, rank by hits.",
             &format!(
-                "SELECT m.filename, count(*) AS hits FROM perf.main.samples({blob}) s JOIN perf.main.mmaps({blob}) m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY m.filename ORDER BY hits DESC"
+                "SELECT m.filename, count(*) AS hits FROM perf.main.samples({blob}) s JOIN perf.main.mmaps({blob}) m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY 1 ORDER BY 2 DESC"
             ),
         ),
     ]);

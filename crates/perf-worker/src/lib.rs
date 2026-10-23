@@ -43,11 +43,12 @@ pub fn version() -> &'static str {
 
 /// The `vgi.agent_test_tasks` suite (VGI152/VGI920), self-contained via the
 /// embedded [`crate::meta::FIXTURE_HEX`] BLOB so `vgi-lint simulate` can execute
-/// every task's `reference_sql` against the attached worker without an external
-/// `perf.data` file. Each prompt hands the analyst the same `from_hex(...)`
-/// capture and asks for a single, unambiguous result with named columns; the
-/// reference results are pinned by the committed synthetic fixture (see
-/// `data/callchain.data`).
+/// every task against the attached worker without an external `perf.data` file.
+/// Each prompt hands the analyst the same `from_hex(...)` capture and asks for a
+/// single, unambiguous result with named columns. The grader `reference_sql` for
+/// each task is private and lives in `vgi-agent-tests.yaml` at the repo root,
+/// keyed by task name (VGI416); its results are pinned by the committed synthetic
+/// fixture (see `data/callchain.data`).
 fn agent_tasks_json() -> String {
     let blob = crate::meta::fixture_blob_src();
     let p_samples = format!(
@@ -74,26 +75,18 @@ fn agent_tasks_json() -> String {
          was recorded for the process in this capture? Return a single row with one column named \
          comm."
     );
-    let r_samples = format!("SELECT count(*) AS n FROM perf.main.samples({blob})");
-    let r_events = format!("SELECT type, sample_period FROM perf.main.events({blob})");
-    let r_meta = format!("SELECT total_events FROM perf.main.meta({blob})");
-    let r_mmaps =
-        format!("SELECT filename, build_id FROM perf.main.mmaps({blob}) ORDER BY filename");
-    let r_comms = format!("SELECT comm FROM perf.main.comms({blob})");
     crate::meta::agent_test_tasks_json(&[
-        ("sample_count", &p_samples, &r_samples),
-        ("event_policy", &p_events, &r_events),
-        ("event_record_total", &p_meta, &r_meta),
-        ("mapped_files_build_ids", &p_mmaps, &r_mmaps),
-        ("process_name", &p_comms, &r_comms),
+        ("sample_count", &p_samples),
+        ("event_policy", &p_events),
+        ("event_record_total", &p_meta),
+        ("mapped_files_build_ids", &p_mmaps),
+        ("process_name", &p_comms),
         (
             "browse_decode_functions",
             "Without decoding any capture, which decode table functions does this worker expose \
              for reading a perf.data file? There is a browsable reference table listing them. \
              Return two columns, object_name and result_columns, one row per table function, \
              ordered by object_name.",
-            "SELECT object_name, result_columns FROM perf.main.functions \
-             WHERE object_kind = 'table function' ORDER BY object_name",
         ),
     ])
 }
@@ -290,6 +283,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
         implementation_version: Some(version().to_string()),
         schemas: vec![CatSchema {
             name: "main".to_string(),
+            path: Vec::new(),
             comment: Some(
                 "perf.data decode functions: samples, mmaps, comms, events, meta.".to_string(),
             ),

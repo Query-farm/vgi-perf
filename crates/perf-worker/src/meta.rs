@@ -142,9 +142,10 @@ pub fn categories_json() -> String {
 }
 
 /// Build the `vgi.agent_test_tasks` JSON value run by `vgi-lint simulate`
-/// (VGI152/VGI920). Each task is `(name, prompt, reference_sql)`; only the prompt
-/// reaches the analyst, the reference_sql is grader-only.
-pub fn agent_test_tasks_json(tasks: &[(&str, &str, &str)]) -> String {
+/// (VGI152/VGI920). Each task is `(name, prompt)`; the grader-only `reference_sql`
+/// lives in the `vgi-agent-tests.yaml` sidecar at the repo root, keyed by task
+/// name, so the analyst never sees it (VGI416).
+pub fn agent_test_tasks_json(tasks: &[(&str, &str)]) -> String {
     fn esc(s: &str) -> String {
         s.replace('\\', "\\\\")
             .replace('"', "\\\"")
@@ -152,12 +153,11 @@ pub fn agent_test_tasks_json(tasks: &[(&str, &str, &str)]) -> String {
     }
     let items: Vec<String> = tasks
         .iter()
-        .map(|(name, prompt, reference_sql)| {
+        .map(|(name, prompt)| {
             format!(
-                "{{\"name\":\"{}\",\"prompt\":\"{}\",\"reference_sql\":\"{}\"}}",
+                "{{\"name\":\"{}\",\"prompt\":\"{}\"}}",
                 esc(name),
-                esc(prompt),
-                esc(reference_sql)
+                esc(prompt)
             )
         })
         .collect();
