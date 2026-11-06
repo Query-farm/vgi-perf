@@ -7,6 +7,11 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Ported to VGI protocol 3.1 (vgi.v3): vgi 0.49.2, vgi-rpc 0.32.3, arrow 59.2.
+  Requires haybarn 2.0 (the community `vgi` extension that speaks vgi.v3).
+
 ## [0.1.0]
 
 ### Added

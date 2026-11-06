@@ -166,6 +166,7 @@ fn functions_view() -> CatView {
                 "Comma-separated list of the columns the function returns.".to_string(),
             ),
         ],
+        ..Default::default()
     }
 }
 
