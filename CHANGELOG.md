@@ -7,6 +7,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-06
+
 ### Changed
 
 - Ported to VGI protocol 3.1 (vgi.v3): vgi 0.49.2, vgi-rpc 0.32.3, arrow 59.2.
