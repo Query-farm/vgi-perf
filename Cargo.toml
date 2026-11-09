@@ -8,7 +8,7 @@ members = ["crates/perf-core", "crates/perf-worker", "crates/perf-wasm"]
 default-members = ["crates/perf-core", "crates/perf-worker"]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.97"
 license = "MIT"
@@ -36,7 +36,7 @@ linux-perf-data = "0.13"
 linux-perf-event-reader = "0.10"
 
 # The pure-Rust core crate, consumed by the worker.
-perf-core = { path = "crates/perf-core", version = "0.2.0" }
+perf-core = { path = "crates/perf-core", version = "0.3.0" }
 
 [profile.release]
 opt-level = 2

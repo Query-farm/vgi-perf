@@ -7,6 +7,8 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
 ### Changed
 
 - Ported to VGI protocol 3.2 (vgi.v3 3.2.0, filtered scan planning): vgi 0.50.0,
