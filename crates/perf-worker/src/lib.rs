@@ -189,6 +189,12 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                 "perf.data Profile Decoder".to_string(),
             ),
             (
+                "vgi.subtitle".to_string(),
+                "Decode Linux perf.data captures into SQL tables of samples, memory mappings, \
+                 and event metadata for bulk profile analysis."
+                    .to_string(),
+            ),
+            (
                 "vgi.keywords".to_string(),
                 crate::meta::keywords_json(
                     "perf, perf.data, linux perf, perf record, profiling, profiler, samples, \
@@ -289,7 +295,7 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                 "perf.data decode functions: samples, mmaps, comms, events, meta.".to_string(),
             ),
             tags: vec![
-                ("vgi.title".to_string(), "perf — main".to_string()),
+                ("vgi.title".to_string(), "perf.data Decoders".to_string()),
                 (
                     "vgi.categories".to_string(),
                     crate::meta::categories_json(),

@@ -14,6 +14,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Ported to VGI protocol 3.2 (vgi.v3 3.2.0, filtered scan planning): vgi 0.50.0,
   vgi-rpc 0.32.3. Requires the haybarn 2.0 rc11+ community `vgi` extension (3.2).
 
+### Fixed
+
+- Catalog metadata now passes vgi-lint-check 2.2: added a one-sentence
+  `vgi.subtitle` (VGI148) and shortened the `main` schema title from the
+  headline-style "perf — main" to "perf.data Decoders" (VGI147).
+
 ## [0.2.0] - 2026-11-06
 
 ### Changed
