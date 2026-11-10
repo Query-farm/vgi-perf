@@ -20,7 +20,7 @@ collapsed-stack text files have already thrown away.
 
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
-ATTACH 'perf' (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-perf@v0.2.0');
+ATTACH 'perf' (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-perf@v0.3.0');
 SET search_path = 'perf.main';
 
 -- hottest instruction pointers (pre-symbolication), by mapped file
@@ -39,7 +39,7 @@ Every [GitHub release](https://github.com/Query-farm/vgi-perf/releases) ships a 
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'perf' AS perf (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-perf@v0.2.0');
+ATTACH 'perf' AS perf (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-perf@v0.3.0');
 
 -- Read the capture-wide metadata (one row).
 SELECT * FROM perf.main.meta('/data/perf.data');
@@ -48,14 +48,14 @@ SELECT * FROM perf.main.meta('/data/perf.data');
 SELECT name, type, sample_period, sample_freq FROM perf.main.events('/data/perf.data');
 ```
 
-Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64). `github-auto://` needs an explicit release tag; change `@v0.2.0` to move to a newer release.
+Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64). `github-auto://` needs an explicit release tag; change `@v0.3.0` to move to a newer release.
 
 ### Other ways to run it
 
 - **Docker** (the image bundles the worker; needs a container runtime):
 
   ```sql
-  ATTACH 'perf' AS perf (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-perf:0.2.0');
+  ATTACH 'perf' AS perf (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-perf:0.3.0');
   ```
 
 - **Manual download.** Download the archive for your platform from the [releases page](https://github.com/Query-farm/vgi-perf/releases), verify it against its `.sha256` file (a cosign `.cosign.bundle` is published alongside), unpack it, and set `LOCATION` to the path of the extracted worker executable.
