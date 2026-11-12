@@ -7,6 +7,14 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-12
+
+### Changed
+
+- Ported to VGI protocol 3.3 (vgi.v3 3.3.0): vgi 0.51.0, vgi-rpc 0.32.4.
+  Requires the current community `vgi` extension (3.3); 3.2 extensions are
+  incompatible. No worker-visible change (the worker has no catalog tables).
+
 ## [0.3.0] - 2026-11-09
 
 ### Changed
