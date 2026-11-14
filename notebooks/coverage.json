@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+        "notes": "Actual five table functions plus one public functions view: six logical surfaces, no exclusions. Complete current/release output schemas and signatures agree. Release-to-current changes descriptions/composed examples only. All read local supplied captures or vocabulary. Notebook runtime is released binary; current mappings are compatible, not exact current notebook execution."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "catalog_sha256": "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d",
+        "notes": "Actual five table functions plus one public functions view: six logical surfaces, no exclusions. Complete current/release output schemas and signatures agree. Release-to-current changes descriptions/composed examples only. All read local supplied captures or vocabulary. Notebook runtime is released binary; current mappings are compatible, not exact current notebook execution."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_self_samples_and_inclusive_stacks.ipynb",
+      "sha256": "7014656baadabc2ac07bf5d776c551690fcadb0f211966053a24dda2260cb988",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "1be55896f547d1e312a2fe5b26324846f318c57612f02f89bba02b9a352138af"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "samples"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "sql": [
+        {
+          "cell": "connection",
+          "reference": "perf.main.samples"
+        }
+      ],
+      "narrative_cells": [
+        "question",
+        "counts-story"
+      ],
+      "result_cells": [
+        "stack-chart",
+        "counts-chart"
+      ],
+      "interpretation_cells": [
+        "counts-chart"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "notebook_sha256": "7014656baadabc2ac07bf5d776c551690fcadb0f211966053a24dda2260cb988",
+        "catalog_sha256": [
+          "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+          "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d"
+        ],
+        "purpose": "Distinguish sampled instructions, inclusive sample-object pairs and frame occurrences under a post-decode stack-depth cutoff.",
+        "finding": "Three samples remain fixed while depth2\u21921 retains5\u21923 frames and4\u21923 inclusive pairs; self counts remain2loop/1libc. Repeated object frames are not proof of recursion or elapsed time."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "mmaps"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "sql": [
+        {
+          "cell": "connection",
+          "reference": "perf.main.mmaps"
+        }
+      ],
+      "narrative_cells": [
+        "mapping-story"
+      ],
+      "result_cells": [
+        "stack-chart",
+        "counts-chart"
+      ],
+      "interpretation_cells": [
+        "stack-chart"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "notebook_sha256": "7014656baadabc2ac07bf5d776c551690fcadb0f211966053a24dda2260cb988",
+        "catalog_sha256": [
+          "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+          "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d"
+        ],
+        "purpose": "Map raw IPs into static object intervals without double counting upper endpoints or discarding unmatched frames.",
+        "finding": "Two nonoverlapping fixture mappings identify loop/libc with build IDs; all5rawframes and3sampledIPs map. Wide half-open arithmetic and explicit start/end probes preserve the upper-bound convention. No mapping timestamps or real-world reuse resolution claimed."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "comms"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "sql": [
+        {
+          "cell": "connection",
+          "reference": "perf.main.comms"
+        }
+      ],
+      "narrative_cells": [
+        "process-story"
+      ],
+      "result_cells": [
+        "process-finding",
+        "stack-chart"
+      ],
+      "interpretation_cells": [
+        "process-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "notebook_sha256": "7014656baadabc2ac07bf5d776c551690fcadb0f211966053a24dda2260cb988",
+        "catalog_sha256": [
+          "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+          "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d"
+        ],
+        "purpose": "Use the recorded thread/process label to interpret sample identities while retaining unavailable name timestamps.",
+        "finding": "One loop name record labels PID/TID1234/1234 and all3samples across2CPUs. The NULLname timestamp means the static fixture label cannot time-resolve command changes or PID reuse."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "events"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "sql": [
+        {
+          "cell": "connection",
+          "reference": "perf.main.events"
+        }
+      ],
+      "narrative_cells": [
+        "attach-story",
+        "process-story",
+        "counts-story"
+      ],
+      "result_cells": [
+        "metadata-finding",
+        "process-finding"
+      ],
+      "interpretation_cells": [
+        "process-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "notebook_sha256": "7014656baadabc2ac07bf5d776c551690fcadb0f211966053a24dda2260cb988",
+        "catalog_sha256": [
+          "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+          "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d"
+        ],
+        "purpose": "Inspect sampling configuration before assigning units to counts or period values.",
+        "finding": "One hardware event attribute reports fixed period4000, matching every returned sample period; name/configuration/samplefrequencyremainunknown. Agreement does not turn periods into seconds or identify a measurement unit from missing metadata."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "meta"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "sql": [
+        {
+          "cell": "connection",
+          "reference": "perf.main.meta"
+        }
+      ],
+      "narrative_cells": [
+        "context-story",
+        "attach-story"
+      ],
+      "result_cells": [
+        "metadata-finding",
+        "checks-finding"
+      ],
+      "interpretation_cells": [
+        "metadata-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "notebook_sha256": "7014656baadabc2ac07bf5d776c551690fcadb0f211966053a24dda2260cb988",
+        "catalog_sha256": [
+          "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+          "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d"
+        ],
+        "purpose": "Separate capture-wide record totals from sample population and retain missing header fields.",
+        "finding": "The metadata total6reconciles3samples+2mappings+1name record. Absent host/architecture/CPUcount/version/commandline remainNULL, not zero measurements; attribute/meta result rows are separate context."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "functions"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "sql": [
+        {
+          "cell": "context-query",
+          "reference": "perf.main.functions"
+        }
+      ],
+      "narrative_cells": [
+        "context-story"
+      ],
+      "result_cells": [
+        "context-finding"
+      ],
+      "interpretation_cells": [
+        "context-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_earthquakes",
+        "reviewed_at": "2026-11-14T20:16:58.368072+00:00",
+        "notebook_sha256": "7014656baadabc2ac07bf5d776c551690fcadb0f211966053a24dda2260cb988",
+        "catalog_sha256": [
+          "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+          "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d"
+        ],
+        "purpose": "Join the worker function reference to actual materialized relation populations to choose the correct denominator and join roles.",
+        "finding": "Five decoded relations occupy three reference categories: samples define the sample denominator, mappings/name records supply interpretation, and event/metadata rows provide configuration. Returned-row counts across these roles must not be combined as sample counts."
+      }
+    }
+  ]
+}

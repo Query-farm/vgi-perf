@@ -1,0 +1,458 @@
+{
+  "schema_version": 1,
+  "status": "met",
+  "meets_target": true,
+  "catalogs": {
+    "released": {
+      "catalog_status": "verified",
+      "revision": "v0.4.0",
+      "catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9",
+      "collection_reconciled": true,
+      "denominator": 6,
+      "observed_objects": 6,
+      "required": 6,
+      "verified_count": 6,
+      "candidate_count": 0,
+      "fraction": 1.0,
+      "meets_target": true,
+      "exact_runtime_count": 6,
+      "runtime_revisions": [
+        "v0.4.0"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comms"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "events"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "functions"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "meta"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "mmaps"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "samples"
+        }
+      ],
+      "uncovered": [],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comms",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "comms(src ANY) -> TABLE(pid INTEGER, tid INTEGER, comm VARCHAR, time UBIGINT)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "events",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "events(src ANY) -> TABLE(event_id UBIGINT, name VARCHAR, type VARCHAR, config UBIGINT, sample_period UBIGINT, sample_freq UBIGINT)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "functions",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "VIEW(object_name VARCHAR, object_kind VARCHAR, category VARCHAR, summary VARCHAR, result_columns VARCHAR)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "meta",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "meta(src ANY) -> TABLE(hostname VARCHAR, arch VARCHAR, nrcpus UINTEGER, perf_version VARCHAR, cmdline VARCHAR[], total_events UBIGINT)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "mmaps",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "mmaps(src ANY) -> TABLE(pid INTEGER, tid INTEGER, addr UBIGINT, len UBIGINT, pgoff UBIGINT, filename VARCHAR, build_id VARCHAR)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "samples",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "samples(src ANY) -> TABLE(time UBIGINT, pid INTEGER, tid INTEGER, cpu UINTEGER, ip UBIGINT, period UBIGINT, event VARCHAR, callchain UBIGINT[])"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        }
+      ],
+      "issues": []
+    },
+    "current": {
+      "catalog_status": "verified",
+      "revision": "2c8ae07c85ff47dc2809a70b9ff0de0d116db654",
+      "catalog_sha256": "125161ac643cdd37b0b9bf4da71e82f77627210c528d6c0766b516c9fc2f250d",
+      "collection_reconciled": true,
+      "denominator": 6,
+      "observed_objects": 6,
+      "required": 6,
+      "verified_count": 6,
+      "candidate_count": 0,
+      "fraction": 1.0,
+      "meets_target": true,
+      "exact_runtime_count": 0,
+      "runtime_revisions": [
+        "v0.4.0"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comms"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "events"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "functions"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "meta"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "mmaps"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "samples"
+        }
+      ],
+      "uncovered": [],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comms",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "comms(src ANY) -> TABLE(pid INTEGER, tid INTEGER, comm VARCHAR, time UBIGINT)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "events",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "events(src ANY) -> TABLE(event_id UBIGINT, name VARCHAR, type VARCHAR, config UBIGINT, sample_period UBIGINT, sample_freq UBIGINT)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "functions",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "VIEW(object_name VARCHAR, object_kind VARCHAR, category VARCHAR, summary VARCHAR, result_columns VARCHAR)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "meta",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "meta(src ANY) -> TABLE(hostname VARCHAR, arch VARCHAR, nrcpus UINTEGER, perf_version VARCHAR, cmdline VARCHAR[], total_events UBIGINT)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "mmaps",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "mmaps(src ANY) -> TABLE(pid INTEGER, tid INTEGER, addr UBIGINT, len UBIGINT, pgoff UBIGINT, filename VARCHAR, build_id VARCHAR)"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "samples",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "samples(src ANY) -> TABLE(time UBIGINT, pid INTEGER, tid INTEGER, cpu UINTEGER, ip UBIGINT, period UBIGINT, event VARCHAR, callchain UBIGINT[])"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  "interface_drift": {
+    "known": true,
+    "current_only": [],
+    "released_only": [],
+    "changed": []
+  },
+  "notebooks": {
+    "01_self_samples_and_inclusive_stacks.ipynb": {
+      "verified": true,
+      "issues": []
+    }
+  },
+  "examples": [
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "samples"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "mmaps"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "comms"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "events"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "meta"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "functions"
+      },
+      "notebook": "01_self_samples_and_inclusive_stacks.ipynb",
+      "runtime_revision": "v0.4.0",
+      "runtime_catalog_sha256": "6c6b44c4c4549a3007763c3d4f86ed1145a98bb38fa77b7ae670c9fe6f9641a9"
+    }
+  ],
+  "issues": []
+}

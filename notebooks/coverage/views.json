@@ -1,0 +1,44 @@
+{
+  "query": "SELECT * FROM duckdb_views() WHERE database_name='perf' ORDER BY schema_name,view_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "schema_oid",
+    "view_name",
+    "view_oid",
+    "comment",
+    "tags",
+    "internal",
+    "temporary",
+    "column_count",
+    "sql",
+    "is_bound"
+  ],
+  "rows": [
+    [
+      "perf",
+      22592,
+      "main",
+      22792,
+      "functions",
+      22793,
+      "Browsable reference of the perf worker's decode functions \u2014 one row per object, with the columns it returns. Browse it to discover the surface before decoding a capture.",
+      {
+        "domain": "observability",
+        "topic": "perf-data-decode",
+        "vgi.category": "Reference",
+        "vgi.doc_llm": "A browsable, no-argument reference of every decode table function the perf worker exposes: one row per function with its name, kind, the category it belongs to, a one-line summary, and the comma-separated list of columns it returns. Query it to discover what to call and what each call returns before you have a perf.data capture in hand \u2014 it takes no arguments and always returns the same rows. To actually decode a capture, call the named function with a perf.data path or the raw bytes.",
+        "vgi.doc_md": "A no-argument catalog of the perf worker's decode functions (`object_name`, `object_kind`, `category`, `summary`, `result_columns`) \u2014 browse `perf.main.functions` to discover what each function returns before decoding a capture.",
+        "vgi.example_queries": "[{\"description\":\"List the decode table functions and the columns each one returns.\",\"sql\":\"SELECT object_name, result_columns FROM perf.main.functions WHERE object_kind = 'table function' ORDER BY object_name\"}]",
+        "vgi.keywords": "[\"functions\",\"catalog\",\"reference\",\"discovery\",\"decode functions\",\"samples\",\"mmaps\",\"comms\",\"events\",\"meta\",\"browsable\",\"result columns\",\"schema\"]",
+        "vgi.title": "perf Decode Functions"
+      },
+      false,
+      false,
+      null,
+      "CREATE VIEW \"functions\" AS SELECT * FROM (SELECT * FROM (VALUES ('samples', 'table function', 'Profile Samples', 'One row per profiling sample (PERF_RECORD_SAMPLE) with its raw call chain.', 'time, pid, tid, cpu, ip, period, event, callchain'), ('mmaps', 'table function', 'Address Space', 'One row per memory mapping (MMAP/MMAP2) with the build-id that makes a raw ip interpretable.', 'pid, tid, addr, len, pgoff, filename, build_id'), ('comms', 'table function', 'Capture Context', 'One row per command/thread-name record (COMM).', 'pid, tid, comm, time'), ('events', 'table function', 'Capture Context', 'One row per recorded event attribute \u2014 what was sampled and how.', 'event_id, name, type, config, sample_period, sample_freq'), ('meta', 'table function', 'Capture Context', 'A single row of capture-wide HEADER_* metadata.', 'hostname, arch, nrcpus, perf_version, cmdline, total_events')) AS valueslist) AS t(object_name, object_kind, category, summary, result_columns);",
+      false
+    ]
+  ]
+}

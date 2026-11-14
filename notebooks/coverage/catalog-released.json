@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "repository": "Query-farm/vgi-perf",
+  "revision": "v0.4.0",
+  "captured_at": "2026-11-14T20:09:42.510972+00:00",
+  "default_schema": "main",
+  "scope": "all_public_functions_and_tables",
+  "complete": true,
+  "evidence": [
+    {
+      "path": "coverage/functions.json",
+      "sha256": "47a5e71c6751dd041200f3b8ac2270872edf37cb5e419bb786fcde9214b08474",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/tables.json",
+      "sha256": "af97074162a4ff462a3b0bac09f55e1fff1b368b54de1de8514e8a02538ded08",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/views.json",
+      "sha256": "f1d40442e247350a35aecb556424a8655913dabc6f80f51772ddd84db2523fe1",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/arguments.json",
+      "sha256": "abee913546c27ccdaad71c0205681acd2f99d21e0ba5402036303de2ebb90579",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/catalog-metadata.json",
+      "sha256": "67f7d0d771f06e830c57af82148cfdbef9bdf7b7fd859797d30c041c5332df87",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/view-columns.json",
+      "sha256": "c5f3e5bee133a071a990ebc6ea5747a0037a66e3171d55ed53955c957afda2a5",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/samples-columns.json",
+      "sha256": "d426594eaddcfee387eb5ba663117bdcb3cd6ecd0a80917f501e5dcaae9504ea",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/mmaps-columns.json",
+      "sha256": "0c59552fa4c4368a9a447d940b56d559292a5577bdcaf85edc57c268209543b0",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/comms-columns.json",
+      "sha256": "dd7cbc7c7e59fa3ee191dcfdd13833a115b8bac156ff59e79f489abb9bfdccae",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/events-columns.json",
+      "sha256": "2419076726ed5f725f91bd05b95a5e3a064f22926d43c628fc8661a17f7e0185",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/meta-columns.json",
+      "sha256": "06b0cacc4dad10eed3c168cf226f7b44851c62fc0434129a89e1388e1bd24725",
+      "description": "Complete worker-filtered runtime export or full output-column DESCRIBE"
+    },
+    {
+      "path": "coverage/source-compatibility.json",
+      "sha256": "4afcff56257a8966e9651820fbd59f8778baf0a485db456c97662c1ed8bfc0d8",
+      "description": "Reviewed metadata-only main diff and existing green source CI"
+    }
+  ],
+  "objects": [
+    {
+      "schema": "main",
+      "name": "comms",
+      "kind": "function",
+      "signatures": [
+        "comms(src ANY) -> TABLE(pid INTEGER, tid INTEGER, comm VARCHAR, time UBIGINT)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "events",
+      "kind": "function",
+      "signatures": [
+        "events(src ANY) -> TABLE(event_id UBIGINT, name VARCHAR, type VARCHAR, config UBIGINT, sample_period UBIGINT, sample_freq UBIGINT)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "meta",
+      "kind": "function",
+      "signatures": [
+        "meta(src ANY) -> TABLE(hostname VARCHAR, arch VARCHAR, nrcpus UINTEGER, perf_version VARCHAR, cmdline VARCHAR[], total_events UBIGINT)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "mmaps",
+      "kind": "function",
+      "signatures": [
+        "mmaps(src ANY) -> TABLE(pid INTEGER, tid INTEGER, addr UBIGINT, len UBIGINT, pgoff UBIGINT, filename VARCHAR, build_id VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "samples",
+      "kind": "function",
+      "signatures": [
+        "samples(src ANY) -> TABLE(time UBIGINT, pid INTEGER, tid INTEGER, cpu UINTEGER, ip UBIGINT, period UBIGINT, event VARCHAR, callchain UBIGINT[])"
+      ],
+      "authentication": "none",
+      "access": "read"
+    },
+    {
+      "schema": "main",
+      "name": "functions",
+      "kind": "table",
+      "signatures": [
+        "VIEW(object_name VARCHAR, object_kind VARCHAR, category VARCHAR, summary VARCHAR, result_columns VARCHAR)"
+      ],
+      "authentication": "none",
+      "access": "read"
+    }
+  ],
+  "runtime": "Haybarn2.0.0rc11",
+  "launch": "github-auto://Query-farm/vgi-perf@v0.4.0",
+  "review_notes": "Five table functions and one public view give six logical surfaces. Path and BLOB input forms count as one named surface each. All read supplied capture bytes or fixed vocabulary; no external writes/authentication/exclusions. Complete registrations and output columns reviewed."
+}

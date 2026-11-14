@@ -1,0 +1,61 @@
+{
+  "query": "DESCRIBE SELECT * FROM perf.main.events('fixtures/callchain.data')",
+  "columns": [
+    "column_name",
+    "column_type",
+    "null",
+    "key",
+    "default",
+    "extra"
+  ],
+  "rows": [
+    [
+      "event_id",
+      "UBIGINT",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "name",
+      "VARCHAR",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "type",
+      "VARCHAR",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "config",
+      "UBIGINT",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "sample_period",
+      "UBIGINT",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "sample_freq",
+      "UBIGINT",
+      "YES",
+      null,
+      null,
+      null
+    ]
+  ]
+}

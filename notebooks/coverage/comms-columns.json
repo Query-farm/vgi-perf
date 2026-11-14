@@ -1,0 +1,45 @@
+{
+  "query": "DESCRIBE SELECT * FROM perf.main.comms('fixtures/callchain.data')",
+  "columns": [
+    "column_name",
+    "column_type",
+    "null",
+    "key",
+    "default",
+    "extra"
+  ],
+  "rows": [
+    [
+      "pid",
+      "INTEGER",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "tid",
+      "INTEGER",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "comm",
+      "VARCHAR",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "time",
+      "UBIGINT",
+      "YES",
+      null,
+      null,
+      null
+    ]
+  ]
+}

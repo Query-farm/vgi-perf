@@ -1,0 +1,61 @@
+{
+  "query": "DESCRIBE SELECT * FROM perf.main.meta('fixtures/callchain.data')",
+  "columns": [
+    "column_name",
+    "column_type",
+    "null",
+    "key",
+    "default",
+    "extra"
+  ],
+  "rows": [
+    [
+      "hostname",
+      "VARCHAR",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "arch",
+      "VARCHAR",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "nrcpus",
+      "UINTEGER",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "perf_version",
+      "VARCHAR",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "cmdline",
+      "VARCHAR[]",
+      "YES",
+      null,
+      null,
+      null
+    ],
+    [
+      "total_events",
+      "UBIGINT",
+      "YES",
+      null,
+      null,
+      null
+    ]
+  ]
+}

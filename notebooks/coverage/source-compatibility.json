@@ -1,0 +1,25 @@
+{
+  "release": "v0.4.0",
+  "release_commit": "75c9774e39bc9df0e7c54d793963d3cb3a71e776",
+  "current_revision": "2c8ae07c85ff47dc2809a70b9ff0de0d116db654",
+  "core_tree_unchanged": true,
+  "root_dependency_files_unchanged": true,
+  "review": "Current changes add composed SQL examples and descriptive metadata only. No decoder,scan-state or output schema changes. Full source diff reviewed; actual exported signatures/output columns match.",
+  "source_ci": {
+    "revision": "2c8ae07c85ff47dc2809a70b9ff0de0d116db654",
+    "url": "https://github.com/Query-farm/vgi-perf/actions/runs/43580055619",
+    "conclusion": "success"
+  },
+  "current_catalog_launch": "Reused existing local perf-worker binary validated by previous source gates; no rebuild for notebook-only work.",
+  "current_binary_sha256": "85189d0b51e02eec129634a2d5e8cc856ce785cab08c044f96bda78b67e52c74",
+  "previous_source_gates": {
+    "build_clippy_fmt_docs": "pass",
+    "unit_tests": 16,
+    "stdio_assertions": 121,
+    "http_assertions": 135,
+    "unix_assertions": 121,
+    "metadata": "Historical lint2.5.0 reports98/100 and3VGI417 warnings; configured fail-on-info exits2. Source CI separately green."
+  },
+  "runtime": "Haybarn2.0.0rc11",
+  "title_subtitle_source": "duckdb_databases tags in catalog-metadata.json; display subtitle collapses metadata whitespace only"
+}
