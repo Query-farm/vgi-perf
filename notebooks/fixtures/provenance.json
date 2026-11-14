@@ -1,0 +1,10 @@
+{
+  "kind": "explicit synthetic binary fixture; not a recorded workload",
+  "source_repository": "https://github.com/Query-farm/vgi-perf",
+  "source_revision": "312b748d5453cda08e4e5a20db2fba2ea4e63207",
+  "source_path": "data/callchain.data",
+  "generator": "crates/perf-core/src/fixture.rs synthetic_callchain()",
+  "sha256": "d0994c41e083085adce1af865b7c90f388b2307a0b3277805acc7219a1f88b83",
+  "bytes": 584,
+  "license": "MIT; see LICENSE-worker-MIT.txt"
+}

@@ -168,3 +168,7 @@ The `perf` worker is part of the [Query.Farm](https://query.farm) VGI ecosystem 
 DuckDB workers. Source: <https://github.com/Query-farm/vgi-perf>.
 
 Copyright 2026 Query Farm LLC — <https://query.farm>
+
+## Executed notebook
+
+[Self samples and inclusive stacks](notebooks/README.md) decodes an explicitly synthetic capture and compares self, inclusive and frame counts under a stack-depth experiment.
