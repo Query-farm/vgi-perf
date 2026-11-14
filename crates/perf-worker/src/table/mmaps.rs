@@ -15,12 +15,12 @@ pub fn def() -> PerfTableFn {
          (offset into the file), `filename` (e.g. '/usr/lib/libc.so.6', '[vdso]'), and `build_id` \
          (the DSO build-id as lowercase hex, from an inline MMAP2 build-id record or the \
          HEADER_BUILD_ID feature section; NULL when unknown). These are what make a sample `ip` \
-         interpretable: join `samples.ip BETWEEN m.addr AND m.addr + m.len` to find which DSO an \
-         IP fell in, and feed `build_id` + the IP to vgi-symbols for native symbolication. \
+         interpretable: join `samples.ip >= m.addr AND samples.ip < m.addr + m.len` (half-open) to \
+         find which DSO an IP fell in, and feed `build_id` + the IP to vgi-symbols for native symbolication. \
          Collapsed-stack text files throw this information away; the binary perf.data keeps it.",
         "Decode perf.data memory mappings into rows: `pid`, `tid`, `addr`, `len`, `pgoff`, \
-         `filename`, `build_id` (lowercase hex, or NULL). Range-join `samples.ip BETWEEN addr AND \
-         addr+len` to attribute an IP to a DSO; `build_id` feeds vgi-symbols. `src` is a path or \
+         `filename`, `build_id` (lowercase hex, or NULL). Range-join `samples.ip >= addr AND \
+         samples.ip < addr+len` to attribute an IP to a DSO; `build_id` feeds vgi-symbols. `src` is a path or \
          `BLOB`.",
         "perf, perf.data, mmap, mmap2, memory mapping, dso, shared object, build id, build_id, \
          symbolication, symbols, address range, module, library, vdso",
@@ -52,22 +52,30 @@ pub fn def() -> PerfTableFn {
         ]),
     ));
     let blob = crate::meta::fixture_blob_src();
-    let examples = crate::meta::example_queries_json(&[
+    let build_ids = format!(
+        "SELECT filename, build_id FROM perf.main.mmaps({blob}) WHERE build_id IS NOT NULL ORDER BY filename"
+    );
+    let hot_files = crate::meta::hot_files_sql(&blob);
+    let symbol_keys = crate::meta::symbolication_keys_sql(&blob);
+    let executable = [
         (
             "Mapped DSOs with a known build-id (for vgi-symbols).",
-            &format!(
-                "SELECT filename, build_id FROM perf.main.mmaps({blob}) WHERE build_id IS NOT NULL ORDER BY filename"
-            ),
+            build_ids.as_str(),
         ),
-        (
-            "Hottest mapped files: join sample ips to DSOs by address range, rank by hits.",
-            &format!(
-                "SELECT m.filename, count(*) AS hits FROM perf.main.samples({blob}) s JOIN perf.main.mmaps({blob}) m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY 1 ORDER BY 2 DESC"
-            ),
-        ),
-    ]);
-    tags.push(("vgi.executable_examples".into(), examples.clone()));
-    tags.push(("vgi.example_queries".into(), examples));
+        (crate::meta::HOT_FILES_DESC, hot_files.as_str()),
+    ];
+    tags.push((
+        "vgi.executable_examples".into(),
+        crate::meta::example_queries_json(&executable),
+    ));
+    // The symbolication-key query adds two more fixture-BLOB references, past the
+    // 4,000-char executable budget (VGI417): `vgi.example_queries` (8,000) only.
+    let mut examples = executable.to_vec();
+    examples.push((crate::meta::SYMBOLICATION_KEYS_DESC, symbol_keys.as_str()));
+    tags.push((
+        "vgi.example_queries".into(),
+        crate::meta::example_queries_json(&examples),
+    ));
     PerfTableFn {
         table: Table::Mmaps,
         name: "mmaps",

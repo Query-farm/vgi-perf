@@ -19,12 +19,13 @@ statement ok
 SET search_path = 'perf.main';
 
 # Synthetic: two samples land in /usr/bin/loop (ip 0x400100), one in libc
-# (ip 0x7f0000000100). Range-join on pid + ip BETWEEN addr AND addr+len.
+# (ip 0x7f0000000100). Range-join on pid + the HALF-OPEN range
+# [addr, addr+len): ip >= addr AND ip < addr + len.
 query TI
 SELECT m.filename, count(*) AS hits
 FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
 JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
-  ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len
+  ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len
 GROUP BY m.filename
 ORDER BY hits DESC, m.filename;
 ----
@@ -37,7 +38,7 @@ query TT
 SELECT m.filename, m.build_id
 FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
 JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
-  ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len
+  ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len
 GROUP BY m.filename, m.build_id
 ORDER BY count(*) DESC, m.filename
 LIMIT 1;
@@ -49,9 +50,72 @@ query I
 SELECT count(*)
 FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
 JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
-  ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len;
+  ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len;
 ----
 3
+
+# Mappings are half-open: /usr/bin/loop covers [0x400000, 0x401000). Its first
+# byte is inside, the byte at addr + len is NOT (BETWEEN would wrongly claim it,
+# double-attributing an ip on the boundary of two adjacent mappings).
+query II
+SELECT p.ip, count(m.filename)
+FROM (VALUES (4194304::UBIGINT), (4198399::UBIGINT), (4198400::UBIGINT)) p(ip)
+LEFT JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
+  ON p.ip >= m.addr AND p.ip < m.addr + m.len
+GROUP BY p.ip
+ORDER BY p.ip;
+----
+4194304	1
+4198399	1
+4198400	0
+
+# Composed: self vs inclusive samples per DSO (call-chain frames unnested and
+# range-joined) — loop is the leaf of 2 samples but on the stack of all 3.
+query TII
+WITH s AS (
+  SELECT row_number() OVER () AS sample_id, pid, ip, callchain
+  FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') WHERE callchain IS NOT NULL
+), frames AS (
+  SELECT sample_id, pid, ip, unnest(callchain) AS frame FROM s
+)
+SELECT m.filename,
+       count(DISTINCT f.sample_id) FILTER (WHERE f.frame = f.ip) AS self_samples,
+       count(DISTINCT f.sample_id) AS inclusive_samples
+FROM frames f
+JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
+  ON f.pid = m.pid AND f.frame >= m.addr AND f.frame < m.addr + m.len
+GROUP BY m.filename
+ORDER BY inclusive_samples DESC, m.filename;
+----
+/usr/bin/loop	2	3
+/usr/lib/libc.so.6	1	1
+
+# Composed: samples + mmaps + comms — hot files labelled with the process name.
+query TTII
+WITH names AS (SELECT pid, arg_max(comm, coalesce(time, 0)) AS comm FROM perf.main.comms('${VGI_PERF_DATA}/callchain.data') GROUP BY pid)
+SELECT n.comm, m.filename, count(*) AS hits, sum(s.period) AS total_period
+FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
+JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
+  ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len
+LEFT JOIN names n ON n.pid = s.pid
+GROUP BY n.comm, m.filename
+ORDER BY hits DESC, m.filename;
+----
+loop	/usr/bin/loop	2	8000
+loop	/usr/lib/libc.so.6	1	4000
+
+# Composed: the (build_id, file offset) keys a vgi-symbols lookup consumes.
+query TTII
+SELECT m.filename, m.build_id, s.ip - m.addr + m.pgoff AS file_offset, count(*) AS hits
+FROM perf.main.samples('${VGI_PERF_DATA}/callchain.data') s
+JOIN perf.main.mmaps('${VGI_PERF_DATA}/callchain.data') m
+  ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len
+WHERE m.build_id IS NOT NULL
+GROUP BY m.filename, m.build_id, file_offset
+ORDER BY hits DESC, m.filename, file_offset;
+----
+/usr/bin/loop	aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	256	2
+/usr/lib/libc.so.6	bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb	256	1
 
 statement ok
 USE memory;

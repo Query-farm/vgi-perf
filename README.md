@@ -27,7 +27,7 @@ SET search_path = 'perf.main';
 SELECT m.filename, count(*) AS hits
 FROM perf.samples('/data/perf.data') s
 JOIN perf.mmaps('/data/perf.data') m
-  ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len
+  ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len
 GROUP BY 1 ORDER BY 2 DESC;
 ```
 
@@ -77,7 +77,6 @@ already loaded into a column).
 | `comms(src)` | `pid` INTEGER, `tid` INTEGER, `comm` VARCHAR, `time` UBIGINT |
 | `events(src)` | `event_id` UBIGINT, `name` VARCHAR, `type` VARCHAR, `config` UBIGINT, `sample_period` UBIGINT, `sample_freq` UBIGINT |
 | `meta(src)` | one row: `hostname` VARCHAR, `arch` VARCHAR, `nrcpus` UINTEGER, `perf_version` VARCHAR, `cmdline` LIST(VARCHAR), `total_events` UBIGINT |
-| `perf_version()` | scalar VARCHAR — the worker version |
 
 ### Example queries
 
@@ -98,6 +97,22 @@ SELECT filename, build_id FROM perf.main.mmaps('/data/perf.data') WHERE build_id
 SELECT s.time, f.frame
 FROM perf.main.samples('/data/perf.data') s, unnest(s.callchain) AS f(frame);
 
+-- self vs inclusive samples per DSO: every call-chain frame, range-joined to its mapping
+WITH s AS (
+  SELECT row_number() OVER () AS sample_id, pid, ip, callchain
+  FROM perf.main.samples('/data/perf.data') WHERE callchain IS NOT NULL
+), frames AS (
+  SELECT sample_id, pid, ip, unnest(callchain) AS frame FROM s
+)
+SELECT m.filename,
+       count(DISTINCT f.sample_id) FILTER (WHERE f.frame = f.ip) AS self_samples,
+       count(DISTINCT f.sample_id) AS inclusive_samples
+FROM frames f
+JOIN perf.main.mmaps('/data/perf.data') m
+  ON f.pid = m.pid AND f.frame >= m.addr AND f.frame < m.addr + m.len
+GROUP BY m.filename
+ORDER BY inclusive_samples DESC, m.filename;
+
 -- decode straight from bytes (BLOB overload)
 SELECT count(*) FROM perf.main.samples(read_blob('/data/perf.data'));
 ```
@@ -108,7 +123,7 @@ SELECT count(*) FROM perf.main.samples(read_blob('/data/perf.data'));
   capture order). **Resolution is not done here** — join `mmaps.build_id` + the
   IP to `vgi-symbols`, mirroring the pprof / minidump → symbols loop.
 - **`mmaps` + `comms` are first-class** because they make samples interpretable:
-  which DSO an `ip` fell in (`ip BETWEEN addr AND addr + len`), and which process
+  which DSO an `ip` fell in (`ip >= addr AND ip < addr + len` — mappings are half-open), and which process
   a `pid` is. Collapsed-stack text files discard them; the binary path keeps them.
 - **Graceful degradation.** `perf.data` varies by kernel and `perf` build. The
   worker reads the `HEADER_*` feature sections and returns **NULL** columns for

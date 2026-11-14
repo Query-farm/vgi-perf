@@ -185,3 +185,51 @@ pub fn object_tags(
         ("vgi.category".to_string(), category.to_string()),
     ]
 }
+
+// ---------------------------------------------------------------------------
+// Composed example queries — each combines two or more of this worker's decode
+// functions in one realistic query. Each SQL is defined ONCE here as a template
+// over the `src` expression, and referenced from both the driving object's
+// `vgi.example_queries` (with the embedded fixture BLOB, so `vgi-lint --execute`
+// runs it) and the schema-level list (with a perf.data path, to stay short).
+//
+// Address ranges are HALF-OPEN: a mapping covers [addr, addr + len), so the
+// join is `ip >= addr AND ip < addr + len` — `BETWEEN` would also claim the
+// first byte past the mapping, double-attributing an ip that sits exactly on
+// the boundary of two adjacent mappings.
+// ---------------------------------------------------------------------------
+
+/// The marquee ip→mmap range join: hottest mapped files by sample count.
+pub const HOT_FILES_DESC: &str = "Hottest mapped files: sample ips range-joined to mmaps.";
+pub fn hot_files_sql(src: &str) -> String {
+    format!(
+        "SELECT m.filename, count(*) AS hits FROM perf.main.samples({src}) s JOIN perf.main.mmaps({src}) m ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len GROUP BY m.filename ORDER BY hits DESC, m.filename"
+    )
+}
+
+/// samples + mmaps + comms: label each process's hot DSOs with its command name.
+pub const HOT_FILES_BY_PROCESS_DESC: &str =
+    "Hot mapped files per process name: samples range-joined to mmaps, labelled with each pid's latest command name from comms (exec renames keep the newest), with hits and total sample period.";
+pub fn hot_files_by_process_sql(src: &str) -> String {
+    format!(
+        "WITH names AS (SELECT pid, arg_max(comm, coalesce(time, 0)) AS comm FROM perf.main.comms({src}) GROUP BY pid) SELECT n.comm, m.filename, count(*) AS hits, sum(s.period) AS total_period FROM perf.main.samples({src}) s JOIN perf.main.mmaps({src}) m ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len LEFT JOIN names n ON n.pid = s.pid GROUP BY n.comm, m.filename ORDER BY hits DESC, m.filename"
+    )
+}
+
+/// samples (unnested call chains) + mmaps: self vs inclusive samples per DSO.
+pub const SELF_VS_INCLUSIVE_DESC: &str =
+    "Self vs inclusive samples per mapped file: unnest every call-chain frame, range-join it to mmaps, and count samples whose leaf ip is in the file (self) vs samples with any frame in it (inclusive).";
+pub fn self_vs_inclusive_sql(src: &str) -> String {
+    format!(
+        "WITH s AS (SELECT row_number() OVER () AS sample_id, pid, ip, callchain FROM perf.main.samples({src}) WHERE callchain IS NOT NULL), frames AS (SELECT sample_id, pid, ip, unnest(callchain) AS frame FROM s) SELECT m.filename, count(DISTINCT f.sample_id) FILTER (WHERE f.frame = f.ip) AS self_samples, count(DISTINCT f.sample_id) AS inclusive_samples FROM frames f JOIN perf.main.mmaps({src}) m ON f.pid = m.pid AND f.frame >= m.addr AND f.frame < m.addr + m.len GROUP BY m.filename ORDER BY inclusive_samples DESC, m.filename"
+    )
+}
+
+/// samples + mmaps: the (build_id, file offset) keys a vgi-symbols lookup needs.
+pub const SYMBOLICATION_KEYS_DESC: &str =
+    "Symbolication input for vgi-symbols: each sampled ip's DSO build-id and file offset (ip - addr + pgoff), with hit counts.";
+pub fn symbolication_keys_sql(src: &str) -> String {
+    format!(
+        "SELECT m.filename, m.build_id, s.ip - m.addr + m.pgoff AS file_offset, count(*) AS hits FROM perf.main.samples({src}) s JOIN perf.main.mmaps({src}) m ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len WHERE m.build_id IS NOT NULL GROUP BY m.filename, m.build_id, file_offset ORDER BY hits DESC, m.filename, file_offset"
+    )
+}

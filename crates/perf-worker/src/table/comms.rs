@@ -32,12 +32,24 @@ pub fn def() -> PerfTableFn {
         ]),
     ));
     let blob = crate::meta::fixture_blob_src();
-    let examples = crate::meta::example_queries_json(&[(
+    let single = [(
         "The distinct process/thread names in a capture, one row per pid — the lookup that turns a numeric pid from `samples` into a human-readable command.",
-        &format!("SELECT DISTINCT pid, comm FROM perf.main.comms({blob}) ORDER BY pid"),
-    )]);
-    tags.push(("vgi.executable_examples".into(), examples.clone()));
-    tags.push(("vgi.example_queries".into(), examples));
+        format!("SELECT DISTINCT pid, comm FROM perf.main.comms({blob}) ORDER BY pid"),
+    )];
+    tags.push((
+        "vgi.executable_examples".into(),
+        crate::meta::example_queries_json(&[(single[0].0, single[0].1.as_str())]),
+    ));
+    // Composed (samples + mmaps + comms): published on `vgi.example_queries` only —
+    // three fixture-BLOB references exceed the 4,000-char executable budget (VGI417).
+    let by_process = crate::meta::hot_files_by_process_sql(&blob);
+    tags.push((
+        "vgi.example_queries".into(),
+        crate::meta::example_queries_json(&[
+            (single[0].0, single[0].1.as_str()),
+            (crate::meta::HOT_FILES_BY_PROCESS_DESC, by_process.as_str()),
+        ]),
+    ));
     PerfTableFn {
         table: Table::Comms,
         name: "comms",

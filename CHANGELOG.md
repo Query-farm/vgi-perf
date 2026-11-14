@@ -7,6 +7,25 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Composed example queries combining the decode functions (published on
+  `samples` / `mmaps` and the schema): hot files labelled by process name
+  (samples + mmaps + comms), self vs inclusive samples per DSO (unnested call
+  chains + mmaps), and the (build_id, file offset) keys for vgi-symbols. New
+  agent test task `loop_frames_outside_leaf`.
+
+### Fixed
+
+- The ip-to-mapping range join in docs, examples, and tests used
+  `ip BETWEEN addr AND addr + len`, which also claims the first byte past a
+  mapping (double-attributing an ip on the boundary of adjacent mappings).
+  Mappings are half-open: `ip >= addr AND ip < addr + len`.
+- README listed a `perf_version()` scalar that the worker no longer exposes
+  (the version is the catalog `implementation_version`).
+- Schema-level example queries no longer use a bare `SELECT *` and have a
+  stable `ORDER BY`.
+
 ## [0.4.0] - 2026-11-12
 
 ### Changed

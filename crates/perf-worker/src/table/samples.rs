@@ -59,22 +59,36 @@ pub fn def() -> PerfTableFn {
         ]),
     ));
     let blob = crate::meta::fixture_blob_src();
-    let examples = crate::meta::example_queries_json(&[
+    let self_inclusive = crate::meta::self_vs_inclusive_sql(&blob);
+    let top_ips = format!(
+        "SELECT ip, count(*) AS hits FROM perf.main.samples({blob}) GROUP BY ip ORDER BY hits DESC LIMIT 10"
+    );
+    let deepest = format!(
+        "SELECT ip, length(callchain) AS depth FROM perf.main.samples({blob}) WHERE callchain IS NOT NULL ORDER BY depth DESC, ip LIMIT 10"
+    );
+    let single = [
         (
             "The ten most frequent raw instruction pointers in a capture — the hottest addresses, pre-symbolication.",
-            &format!(
-                "SELECT ip, count(*) AS hits FROM perf.main.samples({blob}) GROUP BY ip ORDER BY hits DESC LIMIT 10"
-            ),
+            top_ips.as_str(),
         ),
         (
             "The deepest call chains: each sample's leaf ip and how many frames its stack carries.",
-            &format!(
-                "SELECT ip, length(callchain) AS depth FROM perf.main.samples({blob}) WHERE callchain IS NOT NULL ORDER BY depth DESC, ip LIMIT 10"
-            ),
+            deepest.as_str(),
         ),
-    ]);
-    tags.push(("vgi.executable_examples".into(), examples.clone()));
-    tags.push(("vgi.example_queries".into(), examples));
+    ];
+    // The composed query references the embedded fixture BLOB twice, which would
+    // push `vgi.executable_examples` past its 4,000-char agent budget (VGI417), so
+    // it is published on `vgi.example_queries` (8,000) only.
+    tags.push((
+        "vgi.executable_examples".into(),
+        crate::meta::example_queries_json(&single),
+    ));
+    let mut examples = single.to_vec();
+    examples.push((crate::meta::SELF_VS_INCLUSIVE_DESC, self_inclusive.as_str()));
+    tags.push((
+        "vgi.example_queries".into(),
+        crate::meta::example_queries_json(&examples),
+    ));
     PerfTableFn {
         table: Table::Samples,
         name: "samples",

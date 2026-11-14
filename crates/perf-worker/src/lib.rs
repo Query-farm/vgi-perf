@@ -17,7 +17,7 @@
 //! SELECT m.filename, count(*) AS hits
 //! FROM perf.samples('/data/perf.data') s
 //! JOIN perf.mmaps('/data/perf.data') m
-//!   ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len
+//!   ON s.pid = m.pid AND s.ip >= m.addr AND s.ip < m.addr + m.len
 //! GROUP BY 1 ORDER BY 2 DESC;
 //! ```
 //!
@@ -75,12 +75,18 @@ fn agent_tasks_json() -> String {
          was recorded for the process in this capture? Return a single row with one column named \
          comm."
     );
+    let p_loop_callers = format!(
+        "A Linux perf.data capture is available as the BLOB {blob}. Count the samples that have \
+         at least one call-chain frame inside the memory mapping of /usr/bin/loop while their own \
+         sampled ip falls in a different mapped file. Return a single row with one column named n."
+    );
     crate::meta::agent_test_tasks_json(&[
         ("sample_count", &p_samples),
         ("event_policy", &p_events),
         ("event_record_total", &p_meta),
         ("mapped_files_build_ids", &p_mmaps),
         ("process_name", &p_comms),
+        ("loop_frames_outside_leaf", &p_loop_callers),
         (
             "browse_decode_functions",
             "Without decoding any capture, which decode table functions does this worker expose \
@@ -170,6 +176,38 @@ fn functions_view() -> CatView {
     }
 }
 
+/// The schema-level `vgi.example_queries` list: single-function starters plus
+/// the composed queries (each SQL defined once in [`crate::meta`]).
+fn schema_example_queries() -> String {
+    let src = "'/data/perf.data'";
+    let hot_files = crate::meta::hot_files_sql(src);
+    let by_process = crate::meta::hot_files_by_process_sql(src);
+    let self_inclusive = crate::meta::self_vs_inclusive_sql(src);
+    let symbol_keys = crate::meta::symbolication_keys_sql(src);
+    crate::meta::example_queries_json(&[
+        (
+            "Read the capture-wide metadata (one row).",
+            "SELECT hostname, arch, nrcpus, perf_version, cmdline, total_events FROM perf.main.meta('/data/perf.data')",
+        ),
+        (
+            "List the events the capture sampled and how.",
+            "SELECT name, type, sample_period, sample_freq FROM perf.main.events('/data/perf.data') ORDER BY name",
+        ),
+        (
+            "The first ten samples with their raw call chains.",
+            "SELECT time, pid, ip, callchain FROM perf.main.samples('/data/perf.data') ORDER BY time LIMIT 10",
+        ),
+        (
+            "Every mapped DSO and its build-id (the vgi-symbols input).",
+            "SELECT filename, build_id FROM perf.main.mmaps('/data/perf.data') WHERE build_id IS NOT NULL ORDER BY filename",
+        ),
+        (crate::meta::HOT_FILES_DESC, &hot_files),
+        (crate::meta::HOT_FILES_BY_PROCESS_DESC, &by_process),
+        (crate::meta::SELF_VS_INCLUSIVE_DESC, &self_inclusive),
+        (crate::meta::SYMBOLICATION_KEYS_DESC, &symbol_keys),
+    ])
+}
+
 /// Catalog + schema metadata (description, provenance, discovery tags) surfaced
 /// to DuckDB and the `vgi-lint` metadata-quality linter. The table functions
 /// themselves are registered via [`table::register`]; this adds catalog/schema
@@ -249,8 +287,8 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  integer columns so they join and aggregate directly in SQL.\n\n\
                  **Raw IPs, by design.** Instruction pointers and call-chain frames are emitted \
                  **unsymbolicated**. The `mmaps` records — with their `build_id`s — are what make \
-                 a raw `ip` interpretable: range-join `samples.ip BETWEEN m.addr AND m.addr + \
-                 m.len` to find the backing DSO, then feed `build_id` + the IP to **`vgi-symbols`** \
+                 a raw `ip` interpretable: range-join `samples.ip >= m.addr AND samples.ip < \
+                 m.addr + m.len` (mappings are half-open) to find the backing DSO, then feed `build_id` + the IP to **`vgi-symbols`** \
                  for native symbolication, mirroring the pprof / minidump → symbols loop. \
                  Collapsed-stack text files throw the mmap + build-id information away; the binary \
                  `perf.data` path keeps it.\n\n\
@@ -336,20 +374,14 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                      Every decode function takes a `perf.data` path or the raw capture bytes."
                         .to_string(),
                 ),
-                // VGI506 representative example queries for the schema. These scan
-                // an external perf.data file, so they are executed by the haybarn
-                // E2E (test/sql/*.test) rather than the lint sandbox (the VGI9xx
-                // execution rules are disabled in vgi-lint.toml).
+                // VGI506 representative example queries for the schema, over a
+                // perf.data path to keep the list short. The composed queries are
+                // defined once in `meta` and also published (over the embedded
+                // fixture BLOB, executed by `vgi-lint --execute`) on the object
+                // that drives each one.
                 (
                     "vgi.example_queries".to_string(),
-                    r#"[
-  {"description": "Read the capture-wide metadata (one row).", "sql": "SELECT * FROM perf.main.meta('/data/perf.data')"},
-  {"description": "List the events the capture sampled and how.", "sql": "SELECT name, type, sample_period, sample_freq FROM perf.main.events('/data/perf.data')"},
-  {"description": "The first ten samples with their raw call chains.", "sql": "SELECT time, pid, ip, callchain FROM perf.main.samples('/data/perf.data') LIMIT 10"},
-  {"description": "Every mapped DSO and its build-id (the vgi-symbols input).", "sql": "SELECT filename, build_id FROM perf.main.mmaps('/data/perf.data') WHERE build_id IS NOT NULL"},
-  {"description": "Hottest mapped files via an ip-to-mmap address-range join.", "sql": "SELECT m.filename, count(*) AS hits FROM perf.main.samples('/data/perf.data') s JOIN perf.main.mmaps('/data/perf.data') m ON s.pid = m.pid AND s.ip BETWEEN m.addr AND m.addr + m.len GROUP BY 1 ORDER BY 2 DESC"}
-]"#
-                        .to_string(),
+                    schema_example_queries(),
                 ),
             ],
             views: vec![functions_view()],
