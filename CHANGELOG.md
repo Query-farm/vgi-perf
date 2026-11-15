@@ -5,10 +5,13 @@ All notable changes to the `vgi-perf` worker are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.1] - 2026-11-14
 
 ### Added
 
+- Docs link to upstream: the catalog documentation now links the kernel's
+  perf.data file-format specification, perf-record(1), the perf wiki and the
+  linux-perf-data parser (vgi-lint VGI183).
 - Composed example queries combining the decode functions (published on
   `samples` / `mmaps` and the schema): hot files labelled by process name
   (samples + mmaps + comms), self vs inclusive samples per DSO (unnested call

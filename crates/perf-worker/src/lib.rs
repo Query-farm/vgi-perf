@@ -297,7 +297,17 @@ fn catalog_metadata(name: &str) -> CatalogModel {
                  out of scope (DuckDB's `read_csv` already covers it), as is symbolication \
                  (→ vgi-symbols) and `perf.data` *writing*. `perf.data` varies by kernel and perf \
                  build; any `HEADER_*` feature section a capture omits comes back as NULL columns \
-                 rather than failing the query."
+                 rather than failing the query.\n\n## Sources and references\n\n\
+                 - [perf.data file format]\
+                 (https://github.com/torvalds/linux/blob/master/tools/perf/Documentation/perf.data-file-format.txt) \
+                 — the kernel's specification of the header, feature sections and records \
+                 decoded here\n\
+                 - [perf-record(1)](https://man7.org/linux/man-pages/man1/perf-record.1.html) — \
+                 how captures are recorded (`-g` for call chains, `--build-id`)\n\
+                 - [perf wiki](https://perfwiki.github.io/) — the Linux `perf` tool and its \
+                 tutorials\n\
+                 - [linux-perf-data](https://github.com/mstange/linux-perf-data) — the Rust \
+                 parser library this worker decodes with"
                     .to_string(),
             ),
             (
