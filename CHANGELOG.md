@@ -5,6 +5,11 @@ All notable changes to the `vgi-perf` worker are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.0 (2026-11-25)
+
+- VGI protocol 3.4: `vgi` 0.53.2, `vgi-rpc` 0.33.1 (Orchard hosted mode; `blob-vendor` on the native build). Requires the 3.4 community `vgi` extension (haybarn 2.0.1).
+- SQL tests run on haybarn-unittest 2.0.1rc3. Dockerfile HEALTHCHECK probes `HEAD /health` (hosted mode answers anonymous GET with 401).
+
 ## 0.4.2 (2026-11-16)
 
 - Bump the vgi Rust SDK to 0.51.1.
@@ -38,7 +43,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- Ported to VGI protocol 3.3 (vgi.v3 3.3.0): vgi 0.51.0, vgi-rpc 0.32.4.
+- Ported to VGI protocol 3.4 (vgi.v3 3.3.0): vgi 0.53.2, vgi-rpc 0.32.4.
   Requires the current community `vgi` extension (3.3); 3.2 extensions are
   incompatible. No worker-visible change (the worker has no catalog tables).
 
@@ -46,7 +51,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- Ported to VGI protocol 3.2 (vgi.v3 3.2.0, filtered scan planning): vgi 0.50.0,
+- Ported to VGI protocol 3.2 (vgi.v3 3.2.0, filtered scan planning): vgi 0.53.2,
   vgi-rpc 0.32.3. Requires the haybarn 2.0 rc11+ community `vgi` extension (3.2).
 
 ### Fixed
